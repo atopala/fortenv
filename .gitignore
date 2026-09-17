@@ -41,6 +41,9 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Operating system metadata
+.DS_Store
+
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
@@ -77,6 +80,7 @@ web_modules/
 # Next.js build output
 .next
 out
+next-env.d.ts
 
 # Nuxt.js build / generate output
 .nuxt

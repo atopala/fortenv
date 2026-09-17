@@ -1,0 +1,23 @@
+{
+   "name": "@fortenv/telemetry-integration",
+   "private": true,
+   "type": "module",
+   "scripts": {
+      "test": "pnpm -w build && vitest run",
+      "typecheck": "pnpm -w build && tsc -p tsconfig.json",
+      "lint": "eslint .",
+      "lint:fix": "eslint . --fix"
+   },
+   "devDependencies": {
+      "@opentelemetry/api": "^1.9.1",
+      "@opentelemetry/api-logs": "^0.222.0",
+      "@opentelemetry/context-async-hooks": "^2.11.0",
+      "@opentelemetry/sdk-logs": "^0.222.0",
+      "@types/node": "^22.20.2",
+      "fortenv": "workspace:*",
+      "pino": "^10.3.1",
+      "typescript": "^7.0.2",
+      "@fortenv/pino": "workspace:*",
+      "@fortenv/opentelemetry": "workspace:*"
+   }
+}

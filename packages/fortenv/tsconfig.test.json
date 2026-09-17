@@ -1,0 +1,17 @@
+{
+   "extends": "./tsconfig.json",
+   "compilerOptions": {
+      "noEmit": true,
+      "composite": false,
+      "allowJs": true,
+      "checkJs": true,
+      "allowImportingTsExtensions": true
+   },
+   "include": ["src/**/*.ts", "src/**/*.mts", "src/**/__tests__/**/*.js", "src/**/__tests__/**/*.mjs"],
+   "exclude": [
+      "dist",
+      "node_modules",
+      "src/core/__tests__/04-validate-config/malformed",
+      "src/core/__tests__/**/__snapshots__"
+   ]
+}

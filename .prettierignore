@@ -1,0 +1,22 @@
+node_modules
+dist
+.next
+out
+coverage
+.idea
+pnpm-lock.yaml
+*.tsbuildinfo
+**/__snapshots__
+
+# Parser inputs intentionally exercise formatting, imports and invalid syntax.
+packages/fortenv/src/core/__tests__/01-locate-config/**/*.*
+packages/fortenv/src/core/__tests__/02-read-config/**/*.*
+packages/fortenv/src/core/__tests__/03-strip-types/**/*.*
+packages/fortenv/src/core/__tests__/04-validate-config/**/*.*
+packages/fortenv/src/core/__tests__/05-rewrite-imports/**/*.*
+packages/fortenv/src/core/__tests__/06-mock-imports/**/*.*
+packages/fortenv/src/core/__tests__/07-execute-config/**/*.*
+packages/fortenv/src/core/__tests__/08-extract-secrets/**/*.*
+packages/fortenv/src/core/__tests__/13-pipeline/phase-1-discover/**/*.*
+!packages/fortenv/src/core/__tests__/**/*.test.ts
+!packages/fortenv/src/core/__tests__/**/*.md

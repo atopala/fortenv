@@ -1,0 +1,2 @@
+# Node's strip-only output preserves source positions with significant spaces.
+packages/fortenv/src/core/__tests__/03-strip-types/__snapshots__/** -whitespace

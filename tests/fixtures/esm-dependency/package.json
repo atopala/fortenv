@@ -1,0 +1,13 @@
+{
+   "name": "@fortenv-fixture/esm-dependency",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+   "exports": {
+      ".": "./index.js",
+      "./import-time": "./import-time.js"
+   },
+   "devDependencies": {
+      "fortenv": "workspace:*"
+   }
+}

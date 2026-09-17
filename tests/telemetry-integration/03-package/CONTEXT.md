@@ -1,0 +1,3 @@
+# 03 — Dependency boundary
+
+`package.test.ts` requires `FortenvAccessError` from the root public entry and verifies that the telemetry subpath does not re-export it. It also resolves Fortenv to `dist/index.js`, reads its package manifest, and rejects runtime, peer or optional dependencies. Pino and OpenTelemetry development dependencies are rejected in the core package. The core telemetry entry must export only generic subscriptions and telemetry errors/types, with no logger-specific declarations. Both standalone adapters must resolve to built exports, provide `connectFortenv`, and declare exactly Fortenv and their corresponding logger API as peers. Real logger/SDK integration dependencies stay in this private test project.

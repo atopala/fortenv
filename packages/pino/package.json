@@ -1,0 +1,42 @@
+{
+   "name": "@fortenv/pino",
+   "version": "1.0.0",
+   "description": "Pino adapter for Fortenv security events",
+   "license": "Apache-2.0",
+   "type": "module",
+   "main": "./dist/index.js",
+   "types": "./dist/index.d.ts",
+   "exports": {
+      ".": {
+         "types": "./dist/index.d.ts",
+         "default": "./dist/index.js"
+      }
+   },
+   "sideEffects": false,
+   "files": [
+      "dist",
+      "LICENSE",
+      "README.md"
+   ],
+   "publishConfig": {
+      "access": "public"
+   },
+   "engines": {
+      "node": ">=22.23.2"
+   },
+   "scripts": {
+      "clean": "node --input-type=module --eval \"import { rm } from 'node:fs/promises'; await Promise.all(['dist', 'tsconfig.tsbuildinfo'].map((path) => rm(path, { recursive: true, force: true })));\"",
+      "build": "pnpm run clean && tsc -p tsconfig.json",
+      "typecheck": "tsc -p tsconfig.json --noEmit"
+   },
+   "peerDependencies": {
+      "fortenv": "^1.0.0",
+      "pino": "^10.3.1"
+   },
+   "devDependencies": {
+      "fortenv": "workspace:*",
+      "pino": "^10.3.1",
+      "@types/node": "^22.20.2",
+      "typescript": "^7.0.2"
+   }
+}

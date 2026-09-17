@@ -1,0 +1,18 @@
+{
+   "name": "@fortenv/cjs-consumer",
+   "private": true,
+   "type": "commonjs",
+   "scripts": {
+      "test": "pnpm --filter fortenv build && vitest run",
+      "typecheck": "pnpm --filter fortenv build && tsc -p tsconfig.json",
+      "lint": "eslint .",
+      "lint:fix": "eslint . --fix"
+   },
+   "devDependencies": {
+      "@fortenv-fixture/cjs-dependency": "workspace:*",
+      "@fortenv-fixture/esm-dependency": "workspace:*",
+      "@types/node": "^22.20.2",
+      "fortenv": "workspace:*",
+      "typescript": "^7.0.2"
+   }
+}

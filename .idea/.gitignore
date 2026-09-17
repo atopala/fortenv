@@ -1,0 +1,3 @@
+# Keep JetBrains project settings local unless a shared setting is added intentionally.
+*
+!.gitignore

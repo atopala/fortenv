@@ -1,0 +1,12 @@
+[
+  "01: locate config",
+  "02: read source",
+  "03: strip types",
+  "05: rewrite imports",
+  "06: create mock loader",
+  "07: execute synthetic config",
+  "08: validate result and extract names",
+  "09-10: protection callback",
+  "11: real reader evaluated",
+  "11: real config returned and names matched"
+]
