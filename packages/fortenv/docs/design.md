@@ -134,7 +134,7 @@ V1 targets Node.js 22.23.2 and later, with Node 22 as the tested baseline. Enfor
 
 # 6. Package API
 
-- `fortenv` exports `fortenv(fn)`, `FortenvAccessError`, and the `SecretValues` type.
+- `fortenv` exports `fortenv(fn)`, the `FortenvAccessError`/`FortenvConfigError`/`FortenvStateError`/`FortenvUsageError` error taxonomy (see §68), and the `SecretValues` type.
 - `fortenv/config` exports `defineConfig`, configuration and telemetry option types.
 - `fortenv/register` performs preload initialization.
 - `fortenv/telemetry` exports `FortenvEnumerationError`, `SecurityEvent`, and `subscribeSecurityEvents`.
@@ -989,6 +989,15 @@ Managed observer throws/rejections are contained; recursive observer reads still
 
 Callback throws and Promise rejections preserve exact error identity. They neither change grants nor expose ambient values. Bootstrap failure does not reopen environment access. Values already handed to a callback cannot be revoked on error. Invalid runtime/config inputs must fail with useful errors that contain no captured values.
 
+Structured error taxonomy, all exported from the root `fortenv` entry with a stable `code` and no captured secret values:
+
+- `FortenvAccessError` (`FORTENV_ACCESS_DENIED`) — a denied protected `process.env` read (see §67).
+- `FortenvConfigError` (`FORTENV_CONFIG_INVALID`) — invalid configuration or discovery input: config-file location, config shape, secret names, grant arrays, telemetry options, discovery-import misuse, and discovery/real name-set mismatch.
+- `FortenvStateError` (`FORTENV_INVALID_STATE`) — an invalid runtime lifecycle state: a wrapped call before initialization or while loading/failed, initializing more than once, or a second guard installation.
+- `FortenvUsageError` (`FORTENV_INVALID_USAGE`) — invalid caller usage: wrapping an unsupported function kind (e.g. a generator) or a non-function, constructing a wrapped function, or mutating a protected `process.env` key. It extends `TypeError` so existing `instanceof TypeError` checks continue to hold.
+
+`FortenvEnumerationError` (`FORTENV_ENV_ENUMERATED`) remains a diagnostic event error exported from `fortenv/telemetry`. Error construction never throws even if `Error.captureStackTrace` is replaced; stack capture is best-effort (see §67). Codes and class names are part of the public contract; messages are human-readable and may change.
+
 ---
 
 # 69. Performance
@@ -1311,3 +1320,39 @@ Review:
 - Phase-1/Phase-2 consistency;
 - worker behavior;
 - Linux threat-model documentation.
+
+---
+
+# 98. Runtime built-in tampering hardening
+
+This section extends the §2 security scope with the verified anti-tampering guarantee. It is defense-in-depth, not a sandbox: it does not change any public API or the limitations in §§2–4.
+
+A dependency that runs after Fortenv has loaded can replace shared JavaScript built-ins (global constructors and prototype methods). Fortenv must not let such a replacement observe injected values, receive its private secret store or grant registry, forge or redirect a grant, expand a wrapper's granted names, or register an unwrapped function as a wrapper.
+
+To achieve this, Fortenv captures the security-sensitive operations it uses on secret-bearing records, the private value map, and the grant registry **before real config dependencies execute**, and invokes them through a captured `Reflect.apply` rather than through later mutable lookups. The captured operations are:
+
+- object creation and freezing for the injected object (`Object.create`, `Object.freeze`);
+- JSON formatting used in security errors and fallback records (`JSON.stringify`);
+- configuration copying and traversal (array detection, append and traversal; own-key, descriptor and prototype lookup; the `Map` constructor and `Map.prototype.get`/`has`/`set`; plus Map iterator creation and advancement);
+- private-value and authorization lookup (`Map.prototype.get`, `WeakMap.prototype.get`);
+- grant installation (the `WeakMap` and `Set` constructors, `WeakMap.prototype.set`, `Set.prototype.add`);
+- wrapper identity membership (`WeakSet.prototype.has`, `WeakSet.prototype.add`);
+- protected-name membership (`Set.prototype.has`);
+- grant-name traversal during injection (`Set` iterator creation and the Set iterator prototype's `next`).
+
+Verified outcomes, each covered by a regression in test group 15 (`src/core/__tests__/15-runtime-hardening`), tested during real config dependency evaluation and, where the operation runs then, after bootstrap:
+
+- replacing `Object.freeze`, `Object.create`, or `Map.prototype.get` does not reveal an injected value or the private store;
+- replacing `WeakMap.prototype.get`/`set`, or the `Set` constructor/`Set.prototype.add`, does not forge a grant, redirect an installed grant onto an unregistered wrapper, or expand a wrapper's granted names;
+- replacing `WeakSet.prototype.has`/`add` does not let an unwrapped function register; bootstrap fails with the documented `grant target ... is not wrapped with fortenv()` error instead;
+- replacing `Set` iteration does not add an ungranted name to a wrapper's injected object;
+- replacing Map iteration does not rewrite copied config grants, and replacing the WeakMap constructor does not expose the grant registry;
+- replacing array append/traversal or property-descriptor lookup does not insert an attacker wrapper into copied config grants;
+- replacing `Set.prototype.has` after bootstrap does not disable protected environment reads, mutations, or name filtering;
+- replacing `JSON.stringify` after bootstrap does not replace the documented access or mutation error;
+- a combined attack that installs two replacements at once closes both routes.
+
+Bounds:
+
+- Tampering that happens **before** Fortenv captures these references (T0), or with other operations not yet captured, is outside this guarantee. Remaining constructor, membership, environment-guard, and reporting operations are tracked by the security hardening plan rather than implied safe.
+- This does not weaken §3 (Linux initial-environment retention), §18 (delivered values cannot be revoked), or the §4 non-goals. It remains defense-in-depth against same-process interference, not process isolation.

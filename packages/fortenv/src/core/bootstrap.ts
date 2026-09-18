@@ -5,16 +5,17 @@ import { normalizeName } from "../runtime/node/environment.js";
 import { configPath, readConfigSource } from "./config-source.js";
 import { readConfiguration, type SecretEntries } from "./configuration.js";
 import { discoverConfiguration } from "./discovery.js";
+import { FortenvConfigError } from "./security-errors.js";
 
 export function matchingNames(discovered: SecretEntries, actual: SecretEntries): void {
    if (discovered.size !== actual.size || [...discovered.keys()].some((name) => !actual.has(name))) {
-      throw new Error(
+      throw new FortenvConfigError(
          "Fortenv: secret names changed between discovery and real config execution; secret names must be deterministic and independent of imported values.",
       );
    }
    const normalized = new Set([...actual.keys()].map(normalizeName));
    if (normalized.size !== actual.size) {
-      throw new Error("Fortenv: secret names must be unique ignoring case on Windows.");
+      throw new FortenvConfigError("Fortenv: secret names must be unique ignoring case on Windows.");
    }
 }
 

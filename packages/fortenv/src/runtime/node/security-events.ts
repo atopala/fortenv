@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { channel } from "node:diagnostics_channel";
 import { writeSync } from "node:fs";
 
+import { stringifyJson } from "../../core/intrinsics.js";
 import type { FortenvAccessError, FortenvEnumerationError } from "../../core/security-errors.js";
 
 export type SecurityEvent = Readonly<
@@ -41,7 +42,7 @@ export function reportSecurityEvent(event: SecurityEvent, stderrFallback: boolea
             const error = event.error;
             writeSync(
                2,
-               JSON.stringify({
+               stringifyJson({
                   ...event,
                   error: {
                      name: error.name,

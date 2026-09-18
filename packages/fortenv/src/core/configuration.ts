@@ -1,50 +1,65 @@
 import type { TelemetryOptions } from "../config.js";
+import {
+   appendArrayValue,
+   createMap,
+   forEachArrayValue,
+   forEachMapEntry,
+   hasMapKey,
+   isArray,
+   listOwnKeys,
+   readMap,
+   readOwnPropertyDescriptor,
+   readPrototype,
+   stringifyJson,
+   writeMap,
+} from "./intrinsics.js";
+import { FortenvConfigError } from "./security-errors.js";
 
 export type SecretEntries = ReadonlyMap<string, readonly Function[]>;
 
 function record(value: unknown, label: string): Record<string, unknown> {
-   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-      throw new Error(`Fortenv: ${label} must be an object.`);
+   if (value === null || typeof value !== "object" || isArray(value)) {
+      throw new FortenvConfigError(`Fortenv: ${label} must be an object.`);
    }
-   const prototype: unknown = Object.getPrototypeOf(value);
-   if (prototype !== null && Object.getPrototypeOf(prototype) !== null) {
-      throw new Error(`Fortenv: ${label} must be a plain object.`);
+   const prototype = readPrototype(value);
+   if (prototype !== null && readPrototype(prototype) !== null) {
+      throw new FortenvConfigError(`Fortenv: ${label} must be a plain object.`);
    }
    return value as Record<string, unknown>;
 }
 
 function properties(value: object, label: string): Map<string, unknown> {
-   const result = new Map<string, unknown>();
-   for (const key of Reflect.ownKeys(value)) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
+   const result = createMap<string, unknown>();
+   forEachArrayValue(listOwnKeys(value), (key) => {
+      const descriptor = readOwnPropertyDescriptor(value, key)!;
       if (typeof key !== "string" || !("value" in descriptor) || !descriptor.enumerable) {
-         throw new Error(`Fortenv: ${label} must contain only enumerable string data properties.`);
+         throw new FortenvConfigError(`Fortenv: ${label} must contain only enumerable string data properties.`);
       }
-      result.set(key, descriptor.value);
-   }
+      writeMap(result, key, descriptor.value);
+   });
    return result;
 }
 
 export function validateSecretName(name: string): void {
    if (!name || name.includes("=") || name.includes("\0")) {
-      throw new Error("Fortenv: secret names must be nonempty and cannot contain '=' or NUL.");
+      throw new FortenvConfigError("Fortenv: secret names must be nonempty and cannot contain '=' or NUL.");
    }
    if (name.toUpperCase().startsWith("NEXT_PUBLIC_")) {
-      throw new Error("Fortenv: NEXT_PUBLIC_* variables cannot be protected secrets.");
+      throw new FortenvConfigError("Fortenv: NEXT_PUBLIC_* variables cannot be protected secrets.");
    }
 }
 
 function targets(value: unknown, name: string): Function[] {
-   if (!Array.isArray(value)) {
-      throw new Error(`Fortenv: grants for ${JSON.stringify(name)} must be an array of wrapped functions.`);
+   if (!isArray(value)) {
+      throw new FortenvConfigError(`Fortenv: grants for ${stringifyJson(name)} must be an array of wrapped functions.`);
    }
    const result: Function[] = [];
    for (let index = 0; index < value.length; index++) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, index);
+      const descriptor = readOwnPropertyDescriptor(value, index);
       if (!descriptor || !("value" in descriptor) || typeof descriptor.value !== "function") {
-         throw new Error(`Fortenv: grants for ${JSON.stringify(name)} must contain only functions.`);
+         throw new FortenvConfigError(`Fortenv: grants for ${stringifyJson(name)} must contain only functions.`);
       }
-      result.push(descriptor.value);
+      appendArrayValue(result, descriptor.value);
    }
    return result;
 }
@@ -52,16 +67,20 @@ function targets(value: unknown, name: string): Function[] {
 /** Copy the configuration so later mutation cannot change the installed policy. */
 export function readConfiguration(value: unknown): SecretEntries {
    const config = properties(record(value, "configuration"), "configuration");
-   if (!config.has("secrets") || [...config.keys()].some((key) => key !== "secrets" && key !== "telemetry")) {
-      throw new Error("Fortenv: configuration must contain 'secrets' and optionally 'telemetry'.");
+   let unexpectedKey = false;
+   forEachMapEntry(config, (key) => {
+      if (key !== "secrets" && key !== "telemetry") unexpectedKey = true;
+   });
+   if (!hasMapKey(config, "secrets") || unexpectedKey) {
+      throw new FortenvConfigError("Fortenv: configuration must contain 'secrets' and optionally 'telemetry'.");
    }
    readTelemetryOptions(value);
-   const secrets = properties(record(config.get("secrets"), "secrets"), "secrets");
-   const result = new Map<string, readonly Function[]>();
-   for (const [name, value] of secrets) {
+   const secrets = properties(record(readMap(config, "secrets"), "secrets"), "secrets");
+   const result = createMap<string, readonly Function[]>();
+   forEachMapEntry(secrets, (name, secretValue) => {
       validateSecretName(name);
-      result.set(name, targets(value, name));
-   }
+      writeMap(result, name, targets(secretValue, name));
+   });
    return result;
 }
 
@@ -69,16 +88,16 @@ export function readConfiguration(value: unknown): SecretEntries {
 export function readTelemetryOptions(value: unknown): Required<TelemetryOptions> {
    const config = properties(record(value, "configuration"), "configuration");
    const result = { enumeration: false, stderrFallback: false };
-   if (!config.has("telemetry")) return result;
-   const options = properties(record(config.get("telemetry"), "telemetry"), "telemetry");
-   for (const [key, flag] of options) {
+   if (!hasMapKey(config, "telemetry")) return result;
+   const options = properties(record(readMap(config, "telemetry"), "telemetry"), "telemetry");
+   forEachMapEntry(options, (key, flag) => {
       if (key !== "enumeration" && key !== "stderrFallback") {
-         throw new Error(`Fortenv: unknown telemetry option ${JSON.stringify(key)}.`);
+         throw new FortenvConfigError(`Fortenv: unknown telemetry option ${stringifyJson(key)}.`);
       }
       if (typeof flag !== "boolean") {
-         throw new Error(`Fortenv: telemetry.${key} must be a boolean.`);
+         throw new FortenvConfigError(`Fortenv: telemetry.${key} must be a boolean.`);
       }
       result[key] = flag;
-   }
+   });
    return result;
 }

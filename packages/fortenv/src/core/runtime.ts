@@ -1,47 +1,53 @@
-import { isGeneratorFunction } from "node:util/types";
-
 import { normalizeName, protectEnvironment } from "../runtime/node/environment.js";
 import type { SecretEntries } from "./configuration.js";
 import { buildGrants } from "./grants.js";
 import { injectSecrets, type SecretValues } from "./injection.js";
-import { readWeakMap } from "./intrinsics.js";
+import {
+   addWeakSetValue,
+   createSet,
+   createWeakMap,
+   hasWeakSetValue,
+   isGeneratorFunction,
+   readWeakMap,
+} from "./intrinsics.js";
+import { FortenvStateError, FortenvUsageError } from "./security-errors.js";
 
 // Capture before real config dependencies load: later replacements must not see injected values.
 const reflectApply = Reflect.apply;
 
 const wrappers = new WeakSet<Function>();
-let grants = new WeakMap<Function, ReadonlySet<string>>();
+let grants = createWeakMap<Function, ReadonlySet<string>>();
 let values: ReadonlyMap<string, string | undefined> = new Map();
 let phase: "uninitialized" | "loading" | "ready" | "failed" = "uninitialized";
 let initialization: Promise<void> | undefined;
 
 function beginBootstrap(): void {
    if (phase !== "uninitialized") {
-      throw new Error("Fortenv: initialization can only happen once per runtime instance.");
+      throw new FortenvStateError("Fortenv: initialization can only happen once per runtime instance.");
    }
    phase = "loading";
 }
 
 function failBootstrap(): void {
    phase = "failed";
-   grants = new WeakMap();
+   grants = createWeakMap();
    values = new Map();
 }
 
 function installGrants(entries: SecretEntries): void {
-   if (phase !== "loading") throw new Error("Fortenv: configuration is not loading.");
-   grants = buildGrants(entries, (fn) => wrappers.has(fn));
+   if (phase !== "loading") throw new FortenvStateError("Fortenv: configuration is not loading.");
+   grants = buildGrants(entries, (fn) => hasWeakSetValue(wrappers, fn));
    phase = "ready";
 }
 
 function invocationGrants(wrapper: Function): ReadonlySet<string> {
    if (phase === "uninitialized") {
-      throw new Error("Fortenv: not initialized; start Node with --import fortenv/register.");
+      throw new FortenvStateError("Fortenv: not initialized; start Node with --import fortenv/register.");
    }
    if (phase !== "ready") {
-      throw new Error(`Fortenv: wrapped functions cannot run while configuration is ${phase}.`);
+      throw new FortenvStateError(`Fortenv: wrapped functions cannot run while configuration is ${phase}.`);
    }
-   return readWeakMap(grants, wrapper) ?? new Set<string>();
+   return readWeakMap(grants, wrapper) ?? createSet<string>();
 }
 
 /** Wrap a callable; permission comes only from the loaded configuration. */
@@ -49,7 +55,7 @@ export function fortenv<This, Args extends unknown[], Result>(
    fn: (this: This, secrets: SecretValues, ...args: Args) => Result,
 ): (this: This, ...args: Args) => Result {
    if (typeof fn !== "function" || isGeneratorFunction(fn)) {
-      throw new TypeError("Fortenv: expected an ordinary synchronous or async function, not a generator.");
+      throw new FortenvUsageError("Fortenv: expected an ordinary synchronous or async function, not a generator.");
    }
    const wrapped = new Proxy(fn, {
       apply(_target, receiver: unknown, args: unknown[]) {
@@ -57,10 +63,10 @@ export function fortenv<This, Args extends unknown[], Result>(
          return reflectApply(fn, receiver, [secrets, ...args]);
       },
       construct() {
-         throw new TypeError("Fortenv: wrapped functions cannot be used as constructors.");
+         throw new FortenvUsageError("Fortenv: wrapped functions cannot be used as constructors.");
       },
    });
-   wrappers.add(wrapped);
+   addWeakSetValue(wrappers, wrapped);
    return wrapped as unknown as (this: This, ...args: Args) => Result;
 }
 

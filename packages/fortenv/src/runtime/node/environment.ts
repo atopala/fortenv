@@ -1,7 +1,13 @@
 import { syncBuiltinESMExports } from "node:module";
 
 import type { TelemetryOptions } from "../../config.js";
-import { FortenvAccessError, FortenvEnumerationError } from "../../core/security-errors.js";
+import { hasSetValue, stringifyJson } from "../../core/intrinsics.js";
+import {
+   FortenvAccessError,
+   FortenvEnumerationError,
+   FortenvStateError,
+   FortenvUsageError,
+} from "../../core/security-errors.js";
 import { reportSecurityEvent } from "./security-events.js";
 
 // A marker detects a second installed copy. It carries no grants or secret values.
@@ -30,10 +36,11 @@ export function createEnvironmentGuard(
    telemetry: TelemetryOptions = {},
 ): NodeJS.ProcessEnv {
    const { enumeration = false, stderrFallback = false } = telemetry;
-   const protectedKey = (key: PropertyKey): key is string => typeof key === "string" && names.has(normalizeName(key));
+   const protectedKey = (key: PropertyKey): key is string =>
+      typeof key === "string" && hasSetValue(names, normalizeName(key));
    const rejectMutation = (key: PropertyKey): void => {
       if (protectedKey(key)) {
-         throw new TypeError(`Fortenv: configured secret ${JSON.stringify(key)} is read-only.`);
+         throw new FortenvUsageError(`Fortenv: configured secret ${stringifyJson(key)} is read-only.`);
       }
    };
    return new Proxy(original, {
@@ -98,7 +105,9 @@ export function protectEnvironment(
 ): ReadonlyMap<string, string | undefined> {
    const original = process.env;
    if (Reflect.get(original, installed)) {
-      throw new Error("Fortenv: another runtime instance already guards process.env; use one shared package instance.");
+      throw new FortenvStateError(
+         "Fortenv: another runtime instance already guards process.env; use one shared package instance.",
+      );
    }
    const values = captureSecrets(original, names);
    const guard = createEnvironmentGuard(original, new Set(values.keys()), telemetry);

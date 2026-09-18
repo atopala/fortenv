@@ -1,4 +1,4 @@
-import { createNullPrototypeRecord, freezeRecord, readMap } from "./intrinsics.js";
+import { createNullPrototypeRecord, forEachSetValue, freezeRecord, readMap } from "./intrinsics.js";
 
 /** Runtime config determines which own keys are present; values may be absent. */
 export type SecretValues = Readonly<Record<string, string | undefined>>;
@@ -10,6 +10,8 @@ export function injectSecrets(
    normalize: (name: string) => string = (name) => name,
 ): SecretValues {
    const secrets = createNullPrototypeRecord<string | undefined>();
-   for (const name of names) secrets[name] = readMap(values, normalize(name));
+   forEachSetValue(names, (name) => {
+      secrets[name] = readMap(values, normalize(name));
+   });
    return freezeRecord(secrets);
 }

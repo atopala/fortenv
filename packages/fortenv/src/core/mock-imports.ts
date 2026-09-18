@@ -1,4 +1,5 @@
 import { defineConfig } from "../config.js";
+import { FortenvConfigError } from "./security-errors.js";
 
 function mockNamespace(specifier: string, placeholders: WeakSet<Function>): object {
    const members = new Map<PropertyKey, Function>();
@@ -6,7 +7,7 @@ function mockNamespace(specifier: string, placeholders: WeakSet<Function>): obje
       get(_target, name) {
          if (!members.has(name)) {
             function unsupported(): never {
-               throw new Error(
+               throw new FortenvConfigError(
                   `Fortenv: imported values from ${JSON.stringify(specifier)} may only be used as grant references during discovery.`,
                );
             }
@@ -22,7 +23,7 @@ function mockNamespace(specifier: string, placeholders: WeakSet<Function>): obje
          return members.get(name);
       },
       set: () => {
-         throw new Error("Fortenv: discovery imports are read-only.");
+         throw new FortenvConfigError("Fortenv: discovery imports are read-only.");
       },
    });
 }

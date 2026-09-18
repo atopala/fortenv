@@ -9,6 +9,8 @@ These two modules implement the Node-specific boundary. Read the [source guide](
 
 A protected read creates FortenvAccessError, publishes the event synchronously, then throws that same error. Registered wrappers do not bypass the proxy; their values come from private injection. Successful injection emits nothing.
 
+Protected-name membership uses the Set operation captured before real config dependencies load. A later `Set.prototype.has` replacement cannot turn protected reads into ordinary missing-value reads, admit mutations, or expose an inserted protected name through enumeration.
+
 Enumeration always filters protected keys. With `telemetry.enumeration: true`, ownKeys also reports a warning with a captured stack. It does not throw merely for enumeration. Warning events contain no secret name. Mutations are rejected separately; they do not produce access-denied read events.
 
 ## Reporting invariants
@@ -18,6 +20,7 @@ Enumeration always filters protected keys. With `telemetry.enumeration: true`, o
 - Reporting preserves caller context. AsyncLocalStorage suppresses recursion, including work spawned by observers; it never confers authorization.
 - Managed observer throws and Promise rejections are contained. Other observers still receive the event. Nested reads remain denied.
 - Enabled fallback writes a denial JSON record synchronously only when no diagnostics-channel subscriber exists. It never writes enumeration warnings. Stderr failures cannot replace the access error.
+- Error messages and fallback records use the JSON formatter captured before real config dependencies load. A later `JSON.stringify` replacement cannot substitute its own thrown value for the documented denial error.
 - Subscriptions return an idempotent disconnect. Raw diagnostics-channel subscribers retain Node's own exception behavior.
 - There is no buffering, replay, rate limit, exporter or logger lifecycle here. Observers see only events after connection.
 
