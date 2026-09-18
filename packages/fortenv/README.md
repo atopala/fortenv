@@ -60,7 +60,7 @@ Provide environment values before starting Node, using your existing deployment 
 ## Public API
 
 - `fortenv(fn)` injects a readonly secrets object as the callback's first argument. Callers pass only subsequent business arguments. Wrapping alone grants nothing.
-- `FortenvAccessError` is exported from `fortenv` for identifying denied protected-environment reads.
+- `FortenvAccessError` is exported from `fortenv` for identifying denied protected-environment reads. `FortenvConfigError`, `FortenvStateError`, and `FortenvUsageError` are also exported for invalid configuration, invalid runtime state (calls before initialization), and invalid usage (an unsupported wrapped-function kind or a protected mutation); each carries a stable `code` (`FORTENV_CONFIG_INVALID`, `FORTENV_INVALID_STATE`, `FORTENV_INVALID_USAGE`). `FortenvUsageError` extends `TypeError`.
 - `defineConfig({ secrets, telemetry? })` validates the config shape, secret names, function arrays and telemetry flags at runtime, then returns the original config. Calling it does not install or change permissions.
 - `fortenv/register` is the preload entry point. Ordinary imports of `fortenv` and `fortenv/config` do not bootstrap the process.
 - `fortenv/telemetry` exports `subscribeSecurityEvents`, `SecurityEvent`, and `FortenvEnumerationError`. Connecting an observer does not bootstrap the process or grant access.
@@ -214,6 +214,8 @@ const createDb = fortenv(({ DATABASE_URL }) => {
 Pass each dependency only the credential it needs. A dependency can retain or leak credentials deliberately handed to it. Code can also call an accessible registered wrapper directly; Fortenv does not authenticate callers. Returned secrets and captured credentials are outside its protection.
 
 Protection starts when preload captures and scrubs secrets. Earlier preloads, loaders, startup tooling, native code, OS inspection, already-copied values, and code tampering with runtime internals are outside the guarantee. The config, Fortenv installation, and bootstrap environment are trusted. Package export restrictions prevent accidental internal imports; they are not a security boundary against direct filesystem access.
+
+Within that boundary, Fortenv is fail-closed and hardened against dependencies that replace shared built-ins after it loads: the secret-delivery, grant, environment-guard, and error paths use references captured before real config dependencies run, so a later replacement of those operations cannot intercept a value, forge a grant, reopen a protected read, or suppress a denial. This is defense-in-depth for code that loads after Fortenv, not protection against the pre-load and same-process limits listed above; see the design's runtime built-in tampering section.
 
 Child processes and workers receive no automatic secret or grant transfer. They normally start from the sanitized environment and cannot recover removed values through their own Fortenv bootstrap. Explicitly copying credentials into another process is the application's responsibility.
 

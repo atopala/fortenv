@@ -255,14 +255,22 @@ The truthful one-line guarantee stays: _Fortenv removes configured secrets from 
 
 #### Pre-release go/no-go checklist
 
-- [ ] All confirmed in-scope bypasses (SEC-01–13 tested operations, plus SEC-18/20/22/23/24) have passing fail-closed regressions.
-- [ ] SEC-19 route table and SEC-17/SEC-21 limitation controls are documented with explicit dispositions.
-- [ ] No enforcement toggle exists; only diagnostic-verbosity flags are configurable.
+- [x] All confirmed in-scope bypasses (SEC-01–13 tested operations, plus SEC-18/20/22/24) have passing fail-closed regressions. SEC-23 (in-process intrinsic tamper-detection) was assessed as structurally weak and intentionally not built (see §6).
+- [x] SEC-19 routes and SEC-17/SEC-21 limitation controls are documented with explicit dispositions (`09-environment-reacquisition`, `12-limitations`, `10-diagnostics-abuse`).
+- [x] No enforcement toggle exists; only diagnostic-verbosity flags are configurable.
 - [x] No diagnostic path leaks a secret value (SEC-22 green).
-- [ ] README/design state the six architectural limitations above and make no absolute-protection claim.
-- [ ] Required workspace checks pass on the supported Node baseline; platform-specific behavior (Linux `/proc`, Windows case-folding) is labeled tested or untested honestly.
+- [x] README/design state the architectural limitations and make no absolute-protection claim (root + package README "Security boundary"; design §2/§3/§4/§18/§68/§90/§98).
+- [x] Required workspace checks pass on the supported Node baseline; platform-specific behavior is labeled honestly (Linux `/proc/self/environ` documented as a limitation; Windows case-folding recorded as needing a Windows CI run).
 
 Accepted residual risk at V1 release: the six architectural limitations above. Everything else must be either fixed with a regression or documented as an explicit, deterministic limitation control — not left implicit.
+
+#### Release-readiness summary
+
+**Proven (tested, committed):** every SEC ID has an evidence-backed disposition. Fixed with fail-closed regressions: SEC-01–07 (secret delivery, grants, iteration, constructors), SEC-09 (config validation; bootstrap name-comparison held), SEC-10 (`Set.has` + guard-trap operations), SEC-12 (`JSON.stringify`), SEC-11a (`isGeneratorFunction` capture), SEC-12a (failure-tolerant denial-error construction). Attacked and held with no code change (including fully-functional-but-malicious "siphoning" reimplementations): SEC-08, SEC-11, SEC-13, SEC-14, SEC-15, SEC-16, SEC-18, SEC-20, SEC-24. Documented limitation controls: SEC-17 (T0 boundary), SEC-19 (env routes), SEC-21 (diagnostics). Also proven: a structured error taxonomy with stable codes, the fail-closed policy with no enforcement toggle, and zero runtime dependencies.
+
+**Accepted residual risk (architectural, documented, not fixable in V1):** T0 pre-load access and tampering; Linux `/proc/self/environ` startup-environment retention; shared-heap access (inspector/native/heap snapshot); explicitly handed-out values (non-revocable); calls to accessible authorized wrappers; denial of service (not secret theft). Untested rather than accepted: the Windows `toUpperCase` case-folding path and real multi-platform CI runs.
+
+**Honest guarantee:** Fortenv removes configured secrets from ambient `process.env` access and injects them only into explicitly registered functions, is fail-closed, and resists dependencies that replace shared built-ins after it loads. It is strong same-process defense-in-depth — not a sandbox — and must never claim that malicious dependencies cannot access secrets.
 
 ## 7. Evidence and reproducibility protocol
 
