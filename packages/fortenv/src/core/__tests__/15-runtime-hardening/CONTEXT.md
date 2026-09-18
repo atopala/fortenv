@@ -199,6 +199,34 @@ Later fixtures escalate from passive observation to **active siphoning**: they r
 
 These confirm the captured-intrinsic and captured-`Reflect.apply` design defeats an active, siphoning attacker, not merely a passive observer.
 
+### SEC-09 (completion) — name-comparison layered guard held
+
+Fixture `03-config-registration/name-comparison` neutralizes the `Array.prototype.some` membership predicate that `bootstrap.matchingNames` uses, then presents a real config whose secret set differs from discovery. `matchingNames` is layered (size check → membership → case-uniqueness); neutralizing only membership does not bypass it — the size check throws `FortenvConfigError` first, so bootstrap fails closed before the app runs and no secret leaks. A real-only name was never captured at phase 1, so it is absent from the private value map regardless.
+
+### SEC-14 — package export surface held
+
+Fixture `07-package-boundaries/export-surface` deep-scans every public namespace (`fortenv`, `fortenv/config`, `fortenv/telemetry`) and finds no secret value or live store; internal dist subpath imports (`fortenv/dist/core/runtime.js`, etc.) are refused by the exports map; no exported helper installs a grant for an attacker wrapper. Root exports are exactly the intended API.
+
+### SEC-15 — discovery does not execute app imports before protection
+
+Fixture `07-package-boundaries/discovery-execution` imports a side-effecting module that records execution and attempts an ambient read. It runs only in phase-2 real import (after the guard), where its read is denied and it captures nothing — proving discovery did not execute it in phase 1 before protection. Unit-level syntax/non-execution coverage lives in `13-pipeline/phase-1-discover`.
+
+### SEC-16 — environment re-acquisition routes held
+
+Fixture `09-environment-reacquisition/routes` confirms every route to the environment after bootstrap is the guarded object and denies the protected read: `process.env`, `globalThis.process.env`, `require("node:process").env`, and `import { env }`. A spawned child process does not inherit the protected value (scrubbed at capture). References captured before preload and separately-initialized workers are documented limitations (SEC-17), not leaks.
+
+### SEC-17 — documented limitations (control)
+
+Fixture `12-limitations/preload-capture` documents the T0 boundary: a module imported before `fortenv/register` reads the raw value (the limitation), while the post-load ambient read is denied (the guarantee). See `12-limitations/CONTEXT.md` for the Linux `/proc/self/environ`, explicit-handoff, accessible-wrapper, and shared-heap limitations. These are architectural, not fixable in V1.
+
+### SEC-10a — not implemented (by design)
+
+Freezing the `process.env` guard handler and the `fortenv()` wrapper Proxy handler was considered and intentionally not done: those handler objects are module-scoped closures with no external reference (SEC-24), so freezing them defends against a threat that requires a reference no code can obtain. It would add speculative code with no security benefit.
+
+### SEC-10 Windows — untested on this host
+
+The `normalizeName` `toUpperCase` case-folding path for Windows protected-name matching cannot be verified on the macOS/Linux development host; it requires a Windows CI run. Recorded as untested, not as held.
+
 ## Run
 
 From the repository root, build before invoking the focused tests:
