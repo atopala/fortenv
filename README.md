@@ -14,11 +14,21 @@ Fortenv brings explicit secret sharing to ordinary JavaScript and TypeScript—w
 
 Your database client needs its connection URL. Your payload signer needs its private key. Put both in `process.env`, and code running in your process can attempt to read either.
 
-Fortenv lets you draw that boundary in code:
+Fortenv lets you draw that boundary in code. Wrap each function that needs a secret, then grant it explicitly in one config:
 
 ```js
-// In your Fortenv config: two secrets, two explicit grants.
-defineConfig({
+// db.mjs — createDb is the only function granted DATABASE_URL.
+import { fortenv } from "fortenv";
+export const createDb = fortenv.string(({ DATABASE_URL }) => new DatabaseClient(DATABASE_URL));
+```
+
+```js
+// fortenv.config.mjs — the grant map. Each secret lists the exact wrappers allowed to read it.
+import { defineConfig } from "fortenv/config";
+import { createDb } from "./db.mjs";
+import { signPayload } from "./sign.mjs";
+
+export default defineConfig({
    secrets: {
       DATABASE_URL: [createDb],
       PRIVATE_KEY: [signPayload],
@@ -26,7 +36,7 @@ defineConfig({
 });
 ```
 
-`createDb` receives the database URL. `signPayload` receives the private key. Direct reads of either protected key through `process.env` throw—even inside those callbacks. A scan with `Object.entries(process.env)` omits both.
+`createDb` receives the database URL; `signPayload` receives the private key. A grant is the exact wrapper returned by `fortenv.string(...)` — nothing else. Direct reads of either protected key through `process.env` throw, even inside those callbacks, and a scan with `Object.entries(process.env)` omits both.
 
 Fortenv makes sharing deliberate:
 
