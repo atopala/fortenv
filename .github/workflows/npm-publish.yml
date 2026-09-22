@@ -1,0 +1,280 @@
+name: Publish Packages to npm
+
+# Publishing is triggered by CREATING a GitHub Release. The version to publish is
+# read from the release tag (e.g. tag `v0.1.0` -> version `0.1.0`); it is not read
+# from the committed package.json. This keeps the repository's package.json version
+# as "the next version in progress" until a release is actually cut.
+#
+# `workflow_dispatch` allows a manual dry run (and a real run) without a release,
+# for validating the pipeline end to end.
+on:
+   release:
+      types: [created]
+   workflow_dispatch:
+      inputs:
+         dry_run:
+            description: "Dry run — build, verify, and report without publishing"
+            required: true
+            default: "true"
+            type: choice
+            options:
+               - "true"
+               - "false"
+         tag:
+            description: "Tag to publish (e.g. v0.1.0). Uses the latest tag if empty."
+            required: false
+            type: string
+
+concurrency:
+   group: ${{ github.workflow }}-${{ github.ref }}
+   cancel-in-progress: true
+
+jobs:
+   # ---------------------------------------------------------------------------
+   # Step 1: Build & Test. No secrets, no npm token. Runs the full gate, stamps
+   # the release version onto the publishable packages, and uploads the built
+   # artifacts for the publish job to consume.
+   # ---------------------------------------------------------------------------
+   build-and-test:
+      runs-on: ubuntu-latest
+      permissions:
+         contents: read
+
+      steps:
+         - name: Checkout code
+           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+         - name: Install pnpm
+           uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+           with:
+              version: 11.27.0
+              run_install: false
+
+         - name: Setup Node.js
+           uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+           with:
+              node-version: "22.23.2"
+
+         - name: Install dependencies
+           run: pnpm install --frozen-lockfile
+
+         - name: Full workspace gate
+           run: |
+              pnpm build
+              pnpm typecheck
+              pnpm lint
+              pnpm format:check
+              pnpm test
+              pnpm test:integration
+
+         - name: Stamp the release version onto publishable packages
+           run: |
+              if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                VERSION="${{ inputs.tag }}"
+                [ -z "$VERSION" ] && VERSION="$(git describe --tags --abbrev=0)"
+              else
+                VERSION="${GITHUB_REF#refs/tags/}"
+              fi
+              VERSION="${VERSION#v}"
+              if [ -z "$VERSION" ]; then
+                echo "::error::Could not determine a version to publish."
+                exit 1
+              fi
+              echo "Publishing version $VERSION"
+              echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+              # Set the version on each publishable package.
+              for pkg in packages/fortenv packages/pino packages/opentelemetry; do
+                node -e "const f='$pkg/package.json'; const p=JSON.parse(require('fs').readFileSync(f)); p.version='$VERSION'; require('fs').writeFileSync(f, JSON.stringify(p, null, 2)+'\n')"
+              done
+
+              # Pin the adapters' `fortenv` peer dependency to this exact version.
+              for pkg in packages/pino packages/opentelemetry; do
+                node -e "const f='$pkg/package.json'; const p=JSON.parse(require('fs').readFileSync(f)); if(p.peerDependencies&&p.peerDependencies.fortenv) p.peerDependencies.fortenv='^$VERSION'; require('fs').writeFileSync(f, JSON.stringify(p, null, 2)+'\n')"
+              done
+
+         - name: Verify package contents (npm pack --dry-run)
+           run: |
+              echo "### Package contents" >> "$GITHUB_STEP_SUMMARY"
+              for pkg in packages/fortenv packages/pino packages/opentelemetry; do
+                echo "#### $pkg" >> "$GITHUB_STEP_SUMMARY"
+                echo '```' >> "$GITHUB_STEP_SUMMARY"
+                (cd "$pkg" && npm pack --dry-run 2>&1) | tee -a "$GITHUB_STEP_SUMMARY"
+                echo '```' >> "$GITHUB_STEP_SUMMARY"
+              done
+
+         - name: Upload publishable artifacts
+           uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+           with:
+              name: fortenv-publish
+              if-no-files-found: error
+              path: |
+                 packages/fortenv/package.json
+                 packages/fortenv/dist/
+                 packages/fortenv/README.md
+                 packages/fortenv/LICENSE
+                 packages/fortenv/docs/design.md
+                 packages/pino/package.json
+                 packages/pino/dist/
+                 packages/pino/README.md
+                 packages/pino/LICENSE
+                 packages/opentelemetry/package.json
+                 packages/opentelemetry/dist/
+                 packages/opentelemetry/README.md
+                 packages/opentelemetry/LICENSE
+
+   # ---------------------------------------------------------------------------
+   # Step 2: Publish. Downloads the pre-built artifacts and publishes them. Does
+   # NOT run `pnpm install` or any package lifecycle script, so a compromised
+   # dependency cannot run during publish. Egress is locked to the registry and
+   # provenance endpoints.
+   # ---------------------------------------------------------------------------
+   publish:
+      needs: build-and-test
+      runs-on: ubuntu-latest
+      environment: production
+      permissions:
+         contents: read
+         id-token: write # required for npm provenance
+
+      steps:
+         - name: Harden runner
+           uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+           with:
+              egress-policy: block
+              allowed-endpoints: >
+                 github.com:443
+                 api.github.com:443
+                 objects.githubusercontent.com:443
+                 registry.npmjs.org:443
+                 nodejs.org:443
+                 fulcio.sigstore.dev:443
+                 rekor.sigstore.dev:443
+                 tuf-repo-cdn.sigstore.dev:443
+
+         - name: Download publishable artifacts
+           uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+           with:
+              name: fortenv-publish
+
+         - name: Setup Node.js
+           uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+           with:
+              node-version: "22.23.2"
+              registry-url: "https://registry.npmjs.org"
+
+         - name: Upgrade npm
+           run: npm install -g npm@latest
+
+         - name: Verify artifact integrity
+           run: |
+              declare -A EXPECTED_NAMES=(
+                ["packages/fortenv"]="fortenv"
+                ["packages/pino"]="@fortenv/pino"
+                ["packages/opentelemetry"]="@fortenv/opentelemetry"
+              )
+              FAILED=0
+              for pkg in "${!EXPECTED_NAMES[@]}"; do
+                EXPECTED="${EXPECTED_NAMES[$pkg]}"
+                ACTUAL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$pkg/package.json')).name)")
+                if [ "$ACTUAL" != "$EXPECTED" ]; then
+                  echo "::error::INTEGRITY FAILURE: $pkg name is '$ACTUAL', expected '$EXPECTED'"
+                  FAILED=1
+                fi
+                REPO=$(node -e "const p=JSON.parse(require('fs').readFileSync('$pkg/package.json')); console.log(typeof p.repository==='string'?p.repository:p.repository?.url||'')")
+                if [[ "$REPO" != *"atopala/fortenv"* ]]; then
+                  echo "::error::INTEGRITY FAILURE: $pkg repository is '$REPO', expected atopala/fortenv"
+                  FAILED=1
+                fi
+                if [ ! -d "$pkg/dist" ] || [ -z "$(ls -A "$pkg/dist")" ]; then
+                  echo "::error::INTEGRITY FAILURE: $pkg/dist is missing or empty"
+                  FAILED=1
+                fi
+                SCRIPTS=$(node -e "const p=JSON.parse(require('fs').readFileSync('$pkg/package.json')); const s=p.scripts||{}; console.log(Object.keys(s).filter(k=>['preinstall','postinstall','preuninstall','install'].includes(k)).join(','))")
+                if [ -n "$SCRIPTS" ]; then
+                  echo "::error::INTEGRITY FAILURE: $pkg has publish-time lifecycle scripts: $SCRIPTS"
+                  FAILED=1
+                fi
+              done
+              if [ $FAILED -ne 0 ]; then
+                echo "::error::Artifact integrity check failed. Aborting publish."
+                exit 1
+              fi
+              echo "All integrity checks passed."
+
+         - name: Determine version and npm dist-tag
+           id: version
+           run: |
+              VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/fortenv/package.json')).version)")
+              case "$VERSION" in
+                *-alpha*) NPM_TAG="alpha" ;;
+                *-beta*)  NPM_TAG="beta"  ;;
+                *-rc*)    NPM_TAG="rc"    ;;
+                *)        NPM_TAG="latest" ;;
+              esac
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+              echo "Publishing $VERSION with dist-tag: $NPM_TAG"
+
+         - name: Publish to npm
+           env:
+              # First release bootstrap: authenticate with an automation token stored
+              # as the NPM_TOKEN repository/environment secret. Once all packages exist
+              # on npm you can configure npm Trusted Publishing (OIDC) for the repo and
+              # remove this token — provenance below already uses the id-token permission.
+              NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              NPM_CONFIG_PROVENANCE: "true"
+           run: |
+              NPM_TAG="${{ steps.version.outputs.npm_tag }}"
+              VERSION="${{ steps.version.outputs.version }}"
+              DRY_RUN="${{ inputs.dry_run || 'false' }}"
+
+              PUBLISHED=""
+              SKIPPED=""
+              FAILED=""
+
+              publish_pkg() {
+                local pkg_dir="$1"
+                local pkg_name
+                pkg_name=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$pkg_dir/package.json')).name)")
+
+                # Idempotency guard: skip if this exact name@version is already published,
+                # so re-running a partially completed release does not fail with E403.
+                if npm view "${pkg_name}@${VERSION}" version >/dev/null 2>&1; then
+                  echo "Skipped $pkg_dir (${pkg_name}@${VERSION} already published)"
+                  SKIPPED="${SKIPPED}  - $pkg_dir (${pkg_name}@${VERSION} already published)\n"
+                  return
+                fi
+
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "DRY RUN — would publish ${pkg_name}@${VERSION} (tag: $NPM_TAG)"
+                  PUBLISHED="${PUBLISHED}  - $pkg_dir (would publish ${pkg_name}@${VERSION})\n"
+                  return
+                fi
+
+                if npx npm@latest publish --ignore-scripts "./$pkg_dir" --access public --tag "$NPM_TAG" --provenance; then
+                  echo "Published ${pkg_name}@${VERSION}"
+                  PUBLISHED="${PUBLISHED}  - $pkg_dir (${pkg_name}@${VERSION})\n"
+                else
+                  echo "::error::Failed to publish ${pkg_name}@${VERSION} ($pkg_dir)"
+                  FAILED="${FAILED}  - $pkg_dir (${pkg_name}@${VERSION})\n"
+                fi
+              }
+
+              # Publish core first so the adapters' peer dependency resolves.
+              publish_pkg "packages/fortenv"
+              publish_pkg "packages/pino"
+              publish_pkg "packages/opentelemetry"
+
+              {
+                echo "### Publish report ($([ "$DRY_RUN" = "true" ] && echo "dry run" || echo "live"))"
+                [ -n "$PUBLISHED" ] && { echo "**Published:**"; printf "$PUBLISHED"; }
+                [ -n "$SKIPPED" ] && { echo "**Skipped:**"; printf "$SKIPPED"; }
+                [ -n "$FAILED" ] && { echo "**Failed:**"; printf "$FAILED"; }
+                [ -z "$PUBLISHED" ] && [ -z "$FAILED" ] && echo "No packages published — all versions already exist."
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              if [ -n "$FAILED" ]; then
+                echo "::error::One or more packages failed to publish."
+                exit 1
+              fi
