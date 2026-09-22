@@ -10,6 +10,7 @@
       "typecheck": "pnpm --dir packages/fortenv typecheck && pnpm --dir packages/pino typecheck && pnpm --dir packages/opentelemetry typecheck && pnpm --dir tests/telemetry-integration typecheck && pnpm --dir tests/01-esm-consumer typecheck && pnpm --dir tests/02-cjs-consumer typecheck && pnpm --dir apps/website typecheck",
       "lint": "eslint .",
       "test": "pnpm run build && vitest run",
+      "test:coverage": "pnpm run build && vitest run --coverage",
       "test:integration": "pnpm run build && vitest run --project telemetry-integration --project esm-consumer --project cjs-consumer",
       "lint:fix": "eslint . --fix",
       "format": "prettier --write .",
@@ -40,6 +41,7 @@
    "type": "module",
    "devDependencies": {
       "@eslint/js": "^9.39.4",
+      "@vitest/coverage-v8": "^5.0.1",
       "eslint": "^9.39.4",
       "eslint-plugin-simple-import-sort": "^12.1.1",
       "eslint-plugin-unused-imports": "^4.4.1",
