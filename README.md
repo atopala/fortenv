@@ -202,27 +202,23 @@ const disconnect = subscribeSecurityEvents((event) => {
 
 Denied reads publish the same error that is thrown, before throwing it. Managed observer failures cannot replace the denial. Disconnect is idempotent.
 
-### Optional adapters
+### Reference logger adapters
 
-| Package                                                    | Usage                          | Logger peer             |
-| ---------------------------------------------------------- | ------------------------------ | ----------------------- |
-| [@fortenv/pino](packages/pino/README.md)                   | connectFortenv(existingLogger) | pino                    |
-| [@fortenv/opentelemetry](packages/opentelemetry/README.md) | connectFortenv(existingLogger) | @opentelemetry/api-logs |
+Thin, correctly-typed `connectFortenv(logger)` wrappers over `subscribeSecurityEvents` live in this repository as reference implementations — one for [Pino](packages/pino/README.md), one for [OpenTelemetry](packages/opentelemetry/README.md). Each encodes its logger's own conventions (Pino's `err` serializer and log levels; OpenTelemetry severity numbers, `exception.*` attributes and caller-context correlation) while keeping those dependencies out of Fortenv's zero-dependency core.
 
-For example, connect Pino during application startup:
-
-```sh
-npm install @fortenv/pino pino
-```
+They are not published to npm yet — copy the adapter you need, or subscribe directly as shown above. For example, the Pino adapter is ~15 lines:
 
 ```js
-import { connectFortenv } from "@fortenv/pino";
-import pino from "pino";
+import { subscribeSecurityEvents } from "fortenv/telemetry";
 
-const disconnect = connectFortenv(pino());
+export function connectFortenv(logger) {
+   return subscribeSecurityEvents((event) =>
+      logger[event.severity]({ err: event.error, fortenv: event }, event.error.message),
+   );
+}
 ```
 
-Adapters use official logger types. Your application owns logger configuration, transports, providers, exporters and shutdown. OpenTelemetry forwarding preserves the caller's active context for trace/span correlation.
+Your application owns logger configuration, transports, providers, exporters and shutdown.
 
 ### Report environment scans
 

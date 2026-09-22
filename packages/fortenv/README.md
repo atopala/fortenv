@@ -170,31 +170,24 @@ export default defineConfig({
 
 Both flags default to false and are installed before real config dependencies execute. `enumeration: true` reports `fortenv.env.enumerated` warnings with `operation: "ownKeys"` and the caller stack. Enumeration still hides protected keys and values, including inside authorized calls, and does not throw merely because it occurred. A warning records observation, not proof of malicious intent. Enumeration events contain no secret-name field. No rate limiting or deduplication is applied.
 
-Connect an existing logger with `connectFortenv(logger)` from `@fortenv/pino` or `@fortenv/opentelemetry`. Install the adapter alongside `fortenv` and its peer (`pino` or `@opentelemetry/api-logs`). Each returns an idempotent disconnect function and uses the logger library's official types. The adapters create no logger, SDK, provider, transport or exporter. The caller configures, flushes and shuts down those components. Core `fortenv`, including `fortenv/telemetry`, remains dependency-free; other loggers can use `subscribeSecurityEvents` directly.
+Fortenv publishes each security event on a logger-neutral subscription in core `fortenv/telemetry`; forwarding to a specific logger is done by the caller, so core stays dependency-free.
 
-```ts
-import { connectFortenv } from "@fortenv/pino";
-import pino from "pino";
-
-const disconnect = connectFortenv(pino());
-// Disconnect when this observer is no longer needed.
-disconnect();
-```
-
-Pino receives the actual Error under `err`, namespaced `fortenv` metadata, and the error message. Denials use `error`, enumeration uses `warn`, following [Pino's error serialization convention](https://github.com/pinojs/pino/blob/main/docs/api.md). OpenTelemetry receives ERROR (17) or WARN (13), `fortenv.*` metadata and `exception.type/message/stacktrace`, following its [log severity model](https://opentelemetry.io/docs/specs/otel/logs/data-model/). Calls stay in the active caller context, allowing an existing OpenTelemetry context manager and SDK to correlate the log with its trace/span.
-
-Other loggers can connect through a managed callback:
+Connect any logger through the generic subscription — this is the primary integration path and needs no extra package:
 
 ```js
 import { subscribeSecurityEvents } from "fortenv/telemetry";
 
 const disconnect = subscribeSecurityEvents((event) => {
-   // Forward to your existing monitoring system.
-   // event.error is the Error thrown for a denied read.
+   // Forward to your existing logger/monitoring system.
+   // event.error is the Error thrown for a denied read; event.severity is "error" | "warn".
+   // Denials carry event.secret (the NAME, never the value).
 });
+// Later: disconnect() when this observer is no longer needed.
 ```
 
 Managed observer exceptions and rejected promises are contained. Reads from an observer or its spawned async work still obey authorization but do not generate recursive telemetry. Other observers continue receiving the original event. Subscribers attached directly through Node's diagnostics_channel API retain Node's own exception behavior.
+
+Reference adapters for [Pino](../pino/README.md) and [OpenTelemetry](../opentelemetry/README.md) live in this repository. Each is a thin, correctly-typed `connectFortenv(logger)` wrapper over `subscribeSecurityEvents` that encodes the logger's own conventions — Pino receives the Error under `err` with namespaced `fortenv` metadata (denials at `error`, enumeration at `warn`, per [Pino's error serialization](https://github.com/pinojs/pino/blob/main/docs/api.md)); OpenTelemetry receives severity ERROR (17) or WARN (13), `fortenv.*` attributes and `exception.type/message/stacktrace`, per its [log severity model](https://opentelemetry.io/docs/specs/otel/logs/data-model/), in the active caller context. They keep those logger dependencies out of Fortenv's zero-dependency core. Copy either adapter, or subscribe directly as above.
 
 `stderrFallback: true` writes one JSON record for a denied read when no observer is connected. Connecting an observer suppresses that fallback; disconnecting the last observer restores it. It does not print enumeration warnings. An uncaught exception can also receive Node's normal stderr output, independently of Fortenv's fallback. With fallback disabled and no observer, a caught denial remains unlogged.
 
