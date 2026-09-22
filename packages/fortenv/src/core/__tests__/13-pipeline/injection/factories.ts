@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { fortenv } from "fortenv";
+import { fortenv, type SecretValues } from "fortenv";
 
 export class Db {
    readonly url: string | undefined;
@@ -13,19 +13,21 @@ export class Db {
       assert.throws(() => process.env.OTHER_SECRET, /unauthorized access/);
    }
 }
-export const createDb = fortenv(({ DATABASE_URL }, poolSize: number = 10) => new Db(DATABASE_URL, poolSize));
-export const snapshot = fortenv((secrets) => secrets);
-export const unregistered = fortenv((secrets) => secrets);
-export const echo = fortenv((secrets, value: unknown) => ({ secrets, value }));
-export const result = fortenv((_secrets, value: unknown) => value);
-export const later = fortenv(async (secrets, wait: Promise<void>) => {
+export const createDb = fortenv.string(
+   ({ DATABASE_URL }: SecretValues<"DATABASE_URL">, poolSize: number = 10) => new Db(DATABASE_URL, poolSize),
+);
+export const snapshot = fortenv.string((secrets: SecretValues<"DATABASE_URL" | "MISSING">) => secrets);
+export const unregistered = fortenv.string((secrets: SecretValues<"DATABASE_URL">) => secrets);
+export const echo = fortenv.string((secrets: SecretValues<"DATABASE_URL">, value: unknown) => ({ secrets, value }));
+export const result = fortenv.string((_secrets: SecretValues<"DATABASE_URL">, value: unknown) => value);
+export const later = fortenv.string(async (secrets: SecretValues<"DATABASE_URL">, wait: Promise<void>) => {
    await wait;
    return secrets;
 });
-export const fail = fortenv((_secrets, error: Error) => {
+export const fail = fortenv.string((_secrets: SecretValues<"OTHER_SECRET">, error: Error) => {
    throw error;
 });
-export const outer = fortenv((secrets) => {
+export const outer = fortenv.string((secrets: SecretValues<"DATABASE_URL">) => {
    const error = new Error("inner");
    assert.throws(
       () => fail(error),
@@ -34,13 +36,15 @@ export const outer = fortenv((secrets) => {
    assert.deepEqual(Object.keys(unregistered()), []);
    return secrets;
 });
-export const captured = fortenv((secrets, done: (value: unknown) => void, outcome: string) => {
-   setImmediate(() => {
-      assert.throws(() => process.env.DATABASE_URL, /unauthorized access/);
-      done(secrets.DATABASE_URL);
-   });
-   if (outcome === "throw") throw new Error("fixture failure");
-   if (outcome === "reject") return Promise.reject(new Error("fixture failure"));
-   if (outcome === "resolve") return Promise.resolve(secrets.DATABASE_URL);
-   return secrets.DATABASE_URL;
-});
+export const captured = fortenv.string(
+   (secrets: SecretValues<"DATABASE_URL">, done: (value: unknown) => void, outcome: string) => {
+      setImmediate(() => {
+         assert.throws(() => process.env.DATABASE_URL, /unauthorized access/);
+         done(secrets.DATABASE_URL);
+      });
+      if (outcome === "throw") throw new Error("fixture failure");
+      if (outcome === "reject") return Promise.reject(new Error("fixture failure"));
+      if (outcome === "resolve") return Promise.resolve(secrets.DATABASE_URL);
+      return secrets.DATABASE_URL;
+   },
+);

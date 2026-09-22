@@ -5,7 +5,7 @@ import { fortenv } from "../../runtime.js";
 
 describe("04 — defineConfig parameters", () => {
    it("accepts valid computed values and returns the original config", () => {
-      const read = fortenv(() => undefined);
+      const read = fortenv.string(() => undefined);
       const name = "DATABASE_URL";
       const createConfig = () => ({ secrets: { [name]: [read] } });
       const config = createConfig();

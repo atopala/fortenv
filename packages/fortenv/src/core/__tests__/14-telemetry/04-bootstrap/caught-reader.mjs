@@ -6,4 +6,4 @@ try {
    console.log("denial-caught");
 }
 
-export const read = fortenv(({ DATABASE_URL }) => DATABASE_URL);
+export const read = fortenv.string(({ DATABASE_URL }) => DATABASE_URL);

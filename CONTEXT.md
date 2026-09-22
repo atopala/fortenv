@@ -30,7 +30,7 @@ Generated `node_modules`, package `dist`, TypeScript build metadata, Vitest cach
 - The published library has zero runtime dependencies. Node typings are a development dependency. The license is Apache-2.0.
 - Work is test first. Use real source fixtures, focused tests beside their fixtures, and inspectable snapshots. Each scenario can be selected through Vitest.
 - The numbered test folders are pipeline stages, not alternative meanings of bootstrap phase 1 and phase 2. Folder 13 verifies their composition.
-- `fortenv(({ DATABASE_URL }, ...args) => ...)` injects granted keys as the first callback argument. Callers pass business arguments only; protected environment reads always throw.
+- `fortenv.string(({ DATABASE_URL }, ...args) => ...)` injects granted keys as the first callback argument (type the keys with a `SecretValues<"DATABASE_URL">` parameter annotation or `new Fortenv<"DATABASE_URL">()`). Callers pass business arguments only; protected environment reads always throw.
 - Do not rewrite the design to justify implementation behavior. Record mismatches and unresolved requirements in the test guide, and agree on changes before implementing them. The design now records the agreed explicit injection, runtime config validation and telemetry contracts.
 
 ## Commands

@@ -6,8 +6,8 @@ export function rawTarget() {}
 
 if (process.argv[2] === "config") installInterceptor(rawTarget);
 
-export const authorized = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+export const authorized = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );
 

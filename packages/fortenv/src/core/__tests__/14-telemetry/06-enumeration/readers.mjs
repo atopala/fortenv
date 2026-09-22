@@ -28,5 +28,5 @@ export function scanEnvironment() {
 console.log("scan:import:before");
 export const importTimeScan = scanEnvironment();
 console.log("scan:import:after");
-export const authorizedScan = fortenv(scanEnvironment);
-export const read = fortenv(({ DATABASE_URL }) => DATABASE_URL);
+export const authorizedScan = fortenv.string(scanEnvironment);
+export const read = fortenv.string(({ DATABASE_URL }) => DATABASE_URL);

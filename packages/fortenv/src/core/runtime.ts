@@ -50,25 +50,41 @@ function invocationGrants(wrapper: Function): ReadonlySet<string> {
    return readWeakMap(grants, wrapper) ?? createSet<string>();
 }
 
-/** Wrap a callable; permission comes only from the loaded configuration. */
-export function fortenv<This, Args extends unknown[], Result>(
-   fn: (this: This, secrets: SecretValues, ...args: Args) => Result,
-): (this: This, ...args: Args) => Result {
-   if (typeof fn !== "function" || isGeneratorFunction(fn)) {
-      throw new FortenvUsageError("Fortenv: expected an ordinary synchronous or async function, not a generator.");
+/**
+ * The Fortenv wrapper factory. `T` is the union of secret key names this instance
+ * types into the injected object. It is a typing aid only — erased at runtime and not
+ * verified against configuration, which remains the sole grant authority (see design
+ * §11). Use the default `fortenv` instance (loose), annotate the callback's `secrets`
+ * parameter (`fortenv.string((s: SecretValues<"KEY">) => …)`), or instantiate with keys
+ * (`new Fortenv<"KEY">()`).
+ */
+export class Fortenv<T extends string = string> {
+   /**
+    * Wrap a callable; permission comes only from the loaded configuration. Business
+    * arguments, `this` and the result type are inferred from the callback.
+    */
+   string<This, Args extends unknown[], Result>(
+      fn: (this: This, secrets: SecretValues<T>, ...args: Args) => Result,
+   ): (this: This, ...args: Args) => Result {
+      if (typeof fn !== "function" || isGeneratorFunction(fn)) {
+         throw new FortenvUsageError("Fortenv: expected an ordinary synchronous or async function, not a generator.");
+      }
+      const wrapped = new Proxy(fn, {
+         apply(_target, receiver: unknown, args: unknown[]) {
+            const secrets = injectSecrets(invocationGrants(wrapped), values, normalizeName);
+            return reflectApply(fn, receiver, [secrets, ...args]);
+         },
+         construct() {
+            throw new FortenvUsageError("Fortenv: wrapped functions cannot be used as constructors.");
+         },
+      });
+      addWeakSetValue(wrappers, wrapped);
+      return wrapped as unknown as (this: This, ...args: Args) => Result;
    }
-   const wrapped = new Proxy(fn, {
-      apply(_target, receiver: unknown, args: unknown[]) {
-         const secrets = injectSecrets(invocationGrants(wrapped), values, normalizeName);
-         return reflectApply(fn, receiver, [secrets, ...args]);
-      },
-      construct() {
-         throw new FortenvUsageError("Fortenv: wrapped functions cannot be used as constructors.");
-      },
-   });
-   addWeakSetValue(wrappers, wrapped);
-   return wrapped as unknown as (this: This, ...args: Args) => Result;
 }
+
+/** Default loose instance; secret keys can be typed per callback or via `new Fortenv<Keys>()`. */
+export const fortenv = new Fortenv();
 
 async function initialize(): Promise<void> {
    beginBootstrap();

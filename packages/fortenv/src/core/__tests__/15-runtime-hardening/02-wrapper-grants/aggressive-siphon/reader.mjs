@@ -7,7 +7,7 @@ import { installInterceptor } from "./malicious.mjs";
 // trap flows through attacker-controlled handler wrappers.
 if (process.argv[2] === "config") installInterceptor();
 
-export const authorized = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets @param {string} arg */
+export const authorized = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets @param {string} arg */
    (secrets, arg) => secrets.DATABASE_URL === "fake-hardening-database" && arg === "business",
 );

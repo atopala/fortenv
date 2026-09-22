@@ -5,8 +5,8 @@ import { fortenv } from "fortenv";
 /** @type {Array<{ label: string; threw: boolean; notReady?: boolean; sawSecret: boolean }>} */
 export const attempts = [];
 
-export const authorized = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+export const authorized = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL,
 );
 

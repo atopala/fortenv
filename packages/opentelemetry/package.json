@@ -1,7 +1,15 @@
 {
    "name": "@fortenv/opentelemetry",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "description": "OpenTelemetry adapter for Fortenv security events",
+   "author": "Adrian Topala (https://github.com/atopala)",
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/atopala/fortenv.git",
+      "directory": "packages/opentelemetry"
+   },
+   "homepage": "https://github.com/atopala/fortenv#readme",
+   "bugs": "https://github.com/atopala/fortenv/issues",
    "license": "Apache-2.0",
    "type": "module",
    "main": "./dist/index.js",
@@ -30,7 +38,7 @@
       "typecheck": "tsc -p tsconfig.json --noEmit"
    },
    "peerDependencies": {
-      "fortenv": "^1.0.0",
+      "fortenv": "^0.1.0",
       "@opentelemetry/api-logs": "^0.222.0"
    },
    "devDependencies": {

@@ -4,6 +4,8 @@
 
 This document defines the agreed Fortenv V1 architecture, including the explicit secret-injection DX and security telemetry contract. Section numbers remain stable for test references.
 
+**API migration in progress (V1.x):** The wrapper entry is migrating from a bare `fortenv(fn)` to the `Fortenv` class and a default `fortenv` instance. `fortenv.string(fn)` (plain-string delivery, the current V1 behavior) lands first; `.buffer(fn)` and `.secret(fn)` delivery forms follow. Secret key names are typed one of three ways, all developer-supplied typing aids that are erased at runtime and **not** verified against configuration: the default loose `fortenv.string((s) => …)`; a parameter annotation `fortenv.string((s: SecretValues<"DATABASE_URL">) => …)`; or an instance `new Fortenv<"DATABASE_URL">().string((s) => …)`. Configuration remains the sole runtime source of protected names and the sole grant authority (see §11); the key names are written once, in the config. This document describes the target class design; the diagram and examples show all three delivery forms even though only `.string` is currently implemented.
+
 It supersedes earlier exploratory designs involving:
 
 - `reader()`
@@ -22,7 +24,9 @@ It supersedes earlier exploratory designs involving:
 The V1 architecture is:
 
 ```text
-fortenv() wrapper
+Fortenv class / default fortenv instance
+        ↓ .string() / .buffer() / .secret()
+delivery wrapper
         +
 function-identity ACL
         +
@@ -42,7 +46,7 @@ The primary target is Node.js.
 Fortenv removes configured secrets from ambient `process.env` access and injects them into explicitly registered functions:
 
 ```ts
-export const createDb = fortenv(({ DATABASE_URL }) => new Db(DATABASE_URL));
+export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">) => new Db(DATABASE_URL));
 ```
 
 The configuration discovers protected names before application imports execute. Values are captured privately and scrubbed from the original environment. After real function registration, each wrapper receives only its configured secrets as its callback's first argument. All direct protected `process.env` reads throw, including inside registered callbacks.
@@ -134,7 +138,7 @@ V1 targets Node.js 22.23.2 and later, with Node 22 as the tested baseline. Enfor
 
 # 6. Package API
 
-- `fortenv` exports `fortenv(fn)`, the `FortenvAccessError`/`FortenvConfigError`/`FortenvStateError`/`FortenvUsageError` error taxonomy (see §68), and the `SecretValues` type.
+- `fortenv` exports the `Fortenv` class and a default `fortenv` instance (`fortenv = new Fortenv()`). Delivery-form methods register a callback: `fortenv.string(fn)` delivers plain-string values (the current V1 behavior); `fortenv.buffer(fn)` and `fortenv.secret(fn)` are forthcoming delivery forms. Secret keys are typed via the default loose instance, a `SecretValues<Keys>` parameter annotation, or `new Fortenv<Keys>()`; all are erased typing aids, not verified against configuration. Also exports the `FortenvAccessError`/`FortenvConfigError`/`FortenvStateError`/`FortenvUsageError` error taxonomy (see §68), and the `SecretValues` type.
 - `fortenv/config` exports `defineConfig`, configuration and telemetry option types.
 - `fortenv/register` performs preload initialization.
 - `fortenv/telemetry` exports `FortenvEnumerationError`, `SecurityEvent`, and `subscribeSecurityEvents`.
@@ -148,9 +152,9 @@ Ordinary root/config/telemetry imports do not bootstrap the application.
 
 ```ts
 // db.ts — definitions only during configuration loading
-import { fortenv } from "fortenv";
+import { fortenv, type SecretValues } from "fortenv";
 import { Db } from "your-database-package";
-export const createDb = fortenv(({ DATABASE_URL }, poolSize: number = 10) => {
+export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">, poolSize: number = 10) => {
    if (DATABASE_URL === undefined) throw new Error("DATABASE_URL is required");
    return new Db(DATABASE_URL, { poolSize });
 });
@@ -189,9 +193,9 @@ On Windows, capture and environment protection normalize names case-insensitivel
 
 ---
 
-# 10. `fortenv()` behavior
+# 10. `fortenv.string()` behavior
 
-`fortenv(fn)` returns a callable wrapper. On each invocation after bootstrap it creates the authorized secrets object and calls `fn(secrets, ...callerArguments)` with the caller's `this`.
+`fortenv.string(fn)` returns a callable wrapper. On each invocation after bootstrap the wrapper creates the authorized secrets object and calls `fn(secrets, ...callerArguments)` with the caller's `this`. Secret keys are typed via a `SecretValues<Keys>` parameter annotation or a `new Fortenv<Keys>()` instance; those are erased typing aids and the grant comes only from configuration (§11).
 
 The public wrapper takes only the remaining business arguments. It preserves returned values and Promise identity, synchronous throws and asynchronous rejection identity. There is no automatic waiting for bootstrap and no permission lifetime tied to Promise settlement. Thenables are ordinary returned values. Generator callbacks and construction with `new` remain unsupported.
 
@@ -199,9 +203,9 @@ Caller arguments cannot replace the injected first argument. Wrapping alone gran
 
 ---
 
-# 11. `fortenv()` does not grant permissions
+# 11. `fortenv.string()` does not grant permissions
 
-Only the loaded configuration grants keys to exact wrapper identities. Destructuring a name in the callback, callback source text, a function name, and a caller-supplied object confer no grant. The original callback is not a configured identity.
+Only the loaded configuration grants keys to exact wrapper identities. A `SecretValues<Keys>` parameter annotation or a `new Fortenv<Keys>()` instance, destructuring a name in the callback, callback source text, a function name, and a caller-supplied object confer no grant. Those typing aids are erased; they are not verified against configuration and do not change the runtime injection. A key that configuration did not grant is simply absent from the injected object at runtime, regardless of the typed shape. The original callback is not a configured identity.
 
 ---
 
@@ -270,7 +274,7 @@ After bootstrap an unregistered wrapper executes with an empty, frozen, null-pro
 
 # 15. Injected secret object
 
-The first callback argument is a fresh frozen null-prototype object. It has enumerable own data properties for exactly the names granted to that wrapper. Values are strings or `undefined`. A granted missing secret is an own property with value `undefined`; an ungranted key is absent. Names such as `__proto__` are ordinary own properties. The private backing store is never handed to callbacks.
+The first callback argument is a fresh frozen null-prototype object. It has enumerable own data properties for exactly the names granted to that wrapper by configuration. The `Keys` type argument shapes the static type of the object but does not by itself add runtime properties; a typed-but-ungranted key is absent (observed as `undefined` through the typed shape). Values are strings or `undefined`. A granted missing secret is an own property with value `undefined`; an ungranted key is absent. Names such as `__proto__` are ordinary own properties. The private backing store is never handed to callbacks.
 
 ---
 
@@ -325,7 +329,7 @@ An exact registered wrapper is a capability to obtain its configured values. Any
 # 24. Recommended coding style
 
 ```ts
-export const createDb = fortenv(({ DATABASE_URL }) => {
+export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">) => {
    if (DATABASE_URL === undefined) throw new Error("DATABASE_URL is required");
    return new Db(DATABASE_URL);
 });
@@ -965,7 +969,7 @@ Public subpaths are `.`, `./config`, `./register`, and `./telemetry`, each with 
 
 # 66. Type safety
 
-Export `SecretValues = Readonly<Record<string, string | undefined>>`. Contextually type the first callback parameter with this shape, remove it from the public wrapper call signature, and preserve the remaining parameter tuple, `this` and result type. Config in a separate module cannot statically infer which properties are actually granted: runtime configuration is authoritative, and values remain possibly undefined. Cover ordinary, generic and async callbacks with compile-time tests; do not claim arbitrary overloaded callback signatures are preserved.
+Export `SecretValues<Keys extends string = string> = Readonly<Record<Keys, string | undefined>>`. The `Fortenv<T extends string = string>` class method `string(fn)` contextually types the callback's first parameter as `SecretValues<T>`. Keys are supplied one of three ways, all erased typing aids: the default loose `fortenv` instance (`T = string`); a parameter annotation (`fortenv.string((s: SecretValues<"DATABASE_URL" | "API_KEY">) => …)`); or an instance (`new Fortenv<"DATABASE_URL">()`). A single explicit type argument on a call cannot coexist with inference of the remaining parameters, so keys are carried by the instance's `T` (or a parameter annotation), never as a call-site type argument on `string`. None of these are verified against configuration; runtime configuration remains authoritative and values remain possibly undefined. Remove the injected parameter from the public wrapper call signature, and preserve the remaining parameter tuple, `this` and result type. Cover ordinary, generic and async callbacks with compile-time tests; do not claim arbitrary overloaded callback signatures are preserved.
 
 ---
 

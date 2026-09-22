@@ -56,13 +56,13 @@ Use Node.js **22.23.2 or later**. The example uses explicit `.mjs` files so it w
 import { createHmac } from "node:crypto";
 import { fortenv } from "fortenv";
 
-export const signWebhook = fortenv(({ WEBHOOK_SECRET }, payload) => {
+export const signWebhook = fortenv.string(({ WEBHOOK_SECRET }, payload) => {
    // This callback receives WEBHOOK_SECRET; SESSION_SECRET is absent.
    if (WEBHOOK_SECRET === undefined) throw new Error("WEBHOOK_SECRET is required");
    return createHmac("sha256", WEBHOOK_SECRET).update(payload).digest("hex");
 });
 
-export const signSession = fortenv(({ SESSION_SECRET }, sessionId) => {
+export const signSession = fortenv.string(({ SESSION_SECRET }, sessionId) => {
    // This callback receives SESSION_SECRET; WEBHOOK_SECRET is absent.
    if (SESSION_SECRET === undefined) throw new Error("SESSION_SECRET is required");
    return createHmac("sha256", SESSION_SECRET).update(sessionId).digest("hex");
@@ -145,7 +145,7 @@ The complete quick start works as written. These two snippets are deliberately f
 
 ## Permissions you can read
 
-One secret can be granted to several functions. One function can receive several secrets. Register the exact function returned by `fortenv()`.
+One secret can be granted to several functions. One function can receive several secrets. Register the exact function returned by `fortenv.string()`.
 
 | Action                                              | Result                                                                        |
 | --------------------------------------------------- | ----------------------------------------------------------------------------- |

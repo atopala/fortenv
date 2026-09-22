@@ -21,7 +21,10 @@ assert.equal(first.DATABASE_URL, "fake-db");
 assert.equal(Object.hasOwn(first, "MISSING"), true);
 assert.equal(first.MISSING, undefined);
 assert.equal(Object.hasOwn(first, "OTHER_SECRET"), false);
-assert.equal(first.OTHER_SECRET, undefined);
+// OTHER_SECRET is neither declared by the wrapper nor granted, so it is absent at
+// runtime and outside the injected object's type; read it through a loose view.
+const firstLoose = /** @type {import("fortenv").SecretValues} */ (first);
+assert.equal(firstLoose.OTHER_SECRET, undefined);
 assert.notEqual(first, snapshot());
 assert.equal(Reflect.set(first, "DATABASE_URL", "forged"), false);
 assert.equal(snapshot().DATABASE_URL, "fake-db");

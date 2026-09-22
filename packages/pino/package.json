@@ -1,7 +1,15 @@
 {
    "name": "@fortenv/pino",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "description": "Pino adapter for Fortenv security events",
+   "author": "Adrian Topala (https://github.com/atopala)",
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/atopala/fortenv.git",
+      "directory": "packages/pino"
+   },
+   "homepage": "https://github.com/atopala/fortenv#readme",
+   "bugs": "https://github.com/atopala/fortenv/issues",
    "license": "Apache-2.0",
    "type": "module",
    "main": "./dist/index.js",
@@ -30,7 +38,7 @@
       "typecheck": "tsc -p tsconfig.json --noEmit"
    },
    "peerDependencies": {
-      "fortenv": "^1.0.0",
+      "fortenv": "^0.1.0",
       "pino": "^10.3.1"
    },
    "devDependencies": {

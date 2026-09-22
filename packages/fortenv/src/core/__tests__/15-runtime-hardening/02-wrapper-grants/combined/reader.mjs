@@ -4,8 +4,8 @@ import { installInterceptor } from "./malicious.mjs";
 
 // Authorized for DATABASE_URL only. Reports both whether it saw its grant and
 // whether iteration tampering leaked the ungranted PRIVATE_KEY into its object.
-export const authorized = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+export const authorized = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) => ({
       sawDatabase: secrets.DATABASE_URL === "fake-hardening-database",
       leakedPrivate: secrets.PRIVATE_KEY === "fake-hardening-private-key",
@@ -13,8 +13,8 @@ export const authorized = fortenv(
 );
 
 // Never named in the config; must never receive a grant.
-export const unregistered = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+export const unregistered = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) =>
       secrets.DATABASE_URL === "fake-hardening-database" || secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

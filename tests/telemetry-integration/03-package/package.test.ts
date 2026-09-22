@@ -15,7 +15,7 @@ describe("03 — Published dependency boundary", () => {
       const entry = import.meta.resolve(specifier);
       expect(entry).toMatch(/\/dist\/index\.js$/);
       const manifest = JSON.parse(readFileSync(new URL("../package.json", entry), "utf8"));
-      expect(manifest.peerDependencies.fortenv).toBe("^1.0.0");
+      expect(manifest.peerDependencies.fortenv).toBe("^0.1.0");
       expect(Object.keys(manifest.peerDependencies).sort()).toEqual(
          specifier === "@fortenv/pino" ? ["fortenv", "pino"] : ["@opentelemetry/api-logs", "fortenv"],
       );

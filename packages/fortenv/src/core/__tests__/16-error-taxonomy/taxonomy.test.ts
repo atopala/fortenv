@@ -33,7 +33,7 @@ describe("16 — Error taxonomy", () => {
 
    it("throws FortenvStateError with a stable code for calls before initialization", () => {
       // A fresh wrapper invoked before bootstrap is a lifecycle/state error.
-      const read = fortenv(() => "unused");
+      const read = fortenv.string(() => "unused");
       let caught: unknown;
       try {
          read();
@@ -49,7 +49,7 @@ describe("16 — Error taxonomy", () => {
    it("throws FortenvUsageError (a TypeError) for an unsupported wrapped-function kind", () => {
       let caught: unknown;
       try {
-         fortenv(function* () {
+         fortenv.string(function* () {
             yield 1;
          });
       } catch (error) {

@@ -1,4 +1,4 @@
 import { fortenv } from "fortenv";
-const registered = fortenv(({ DATABASE_URL }) => DATABASE_URL);
-const unregistered = fortenv((secrets) => secrets);
+const registered = fortenv.string(({ DATABASE_URL }) => DATABASE_URL);
+const unregistered = fortenv.string((secrets) => secrets);
 export { registered, unregistered };

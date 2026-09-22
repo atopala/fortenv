@@ -7,8 +7,8 @@ import { fortenv } from "../../runtime.js";
 describe("11 — Register grants", () => {
    it("combines configured grants by exact wrapper identity", () => {
       const original = () => undefined;
-      const first = fortenv(original);
-      const second = fortenv(original);
+      const first = fortenv.string(original);
+      const second = fortenv.string(original);
       const wrappers = new WeakSet<Function>([first, second]);
       const entries = new Map([
          ["DATABASE_URL", [first, second]],
@@ -24,7 +24,7 @@ describe("11 — Register grants", () => {
    });
 
    it("rejects invalid identities without changing an already-built ACL", () => {
-      const reader = fortenv(() => undefined);
+      const reader = fortenv.string(() => undefined);
       const valid = new Map([["DATABASE_URL", [reader]]]);
       const isWrapper = (fn: Function) => fn === reader;
       const grants = buildGrants(valid, isWrapper);
@@ -35,7 +35,7 @@ describe("11 — Register grants", () => {
    });
 
    it("preserves configuration spellings for injected object keys", () => {
-      const reader = fortenv(() => undefined);
+      const reader = fortenv.string(() => undefined);
       const grants = buildGrants(new Map([["secret", [reader]]]), (fn) => fn === reader);
       expect([...grants.get(reader)!]).toEqual(["secret"]);
    });

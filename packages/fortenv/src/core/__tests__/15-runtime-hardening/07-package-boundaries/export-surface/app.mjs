@@ -73,8 +73,8 @@ for (const spec of ["fortenv/dist/core/runtime.js", "fortenv/core/runtime", "for
 }
 
 // 3. Try to use any exported helper to install a grant for an attacker wrapper.
-const attacker = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+const attacker = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) =>
       secrets.DATABASE_URL === "fake-hardening-database" || secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

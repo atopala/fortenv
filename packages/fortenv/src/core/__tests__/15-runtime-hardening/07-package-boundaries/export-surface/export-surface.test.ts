@@ -32,6 +32,7 @@ describe("15.07 SEC-14 — package exports expose no live state or grant backdoo
       expect(observed.attackerGotSecret).toBe(false); // no grant-installation backdoor
       // Root export surface is exactly the intended API.
       expect(observed.rootExports).toEqual([
+         "Fortenv",
          "FortenvAccessError",
          "FortenvConfigError",
          "FortenvStateError",

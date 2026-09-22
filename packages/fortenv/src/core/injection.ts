@@ -1,7 +1,7 @@
 import { createNullPrototypeRecord, forEachSetValue, freezeRecord, readMap } from "./intrinsics.js";
 
 /** Runtime config determines which own keys are present; values may be absent. */
-export type SecretValues = Readonly<Record<string, string | undefined>>;
+export type SecretValues<Keys extends string = string> = Readonly<Record<Keys, string | undefined>>;
 
 /** Copy only this wrapper's grants. Never hand the backing store to application code. */
 export function injectSecrets(

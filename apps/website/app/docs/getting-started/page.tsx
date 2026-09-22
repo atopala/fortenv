@@ -32,7 +32,7 @@ export default function GettingStarted() {
 import { fortenv } from "fortenv";
 import { DatabaseClient } from "your-database-package";
 
-export const createDb = fortenv(({ DATABASE_URL }, poolSize = 10) => {
+export const createDb = fortenv.string(({ DATABASE_URL }, poolSize = 10) => {
   if (DATABASE_URL === undefined) {
     throw new Error("DATABASE_URL is required");
   }

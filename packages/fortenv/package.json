@@ -1,7 +1,24 @@
 {
    "name": "fortenv",
-   "version": "1.0.0",
+   "version": "0.1.0",
    "description": "Remove ambient access to environment secrets with explicit function grants",
+   "author": "Adrian Topala (https://github.com/atopala)",
+   "keywords": [
+      "secrets",
+      "environment",
+      "process.env",
+      "security",
+      "dotenv",
+      "nodejs",
+      "typescript"
+   ],
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/atopala/fortenv.git",
+      "directory": "packages/fortenv"
+   },
+   "homepage": "https://github.com/atopala/fortenv#readme",
+   "bugs": "https://github.com/atopala/fortenv/issues",
    "main": "./dist/index.js",
    "scripts": {
       "clean": "node --input-type=module --eval \"import { rm } from 'node:fs/promises'; await Promise.all(['dist', 'tsconfig.tsbuildinfo'].map((path) => rm(path, { recursive: true, force: true })));\"",
@@ -11,8 +28,6 @@
       "test": "pnpm run build && vitest run",
       "lint:fix": "eslint . --fix"
    },
-   "keywords": [],
-   "author": "",
    "license": "Apache-2.0",
    "type": "module",
    "types": "./dist/index.d.ts",

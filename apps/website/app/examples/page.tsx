@@ -9,7 +9,7 @@ const examples = [
       number: "01",
       title: "Database factory",
       description: "Give a client constructor its URL without leaving that URL available through process.env.",
-      code: `export const createDb = fortenv(({ DATABASE_URL }) => {
+      code: `export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">) => {
   if (!DATABASE_URL) throw new Error("DATABASE_URL is required");
   return new DatabaseClient(DATABASE_URL);
 });`,
@@ -18,8 +18,8 @@ const examples = [
       number: "02",
       title: "Payload signing",
       description: "Keep a private signing key scoped to one explicit operation.",
-      code: `export const signPayload = fortenv(
-  ({ PRIVATE_KEY }, payload) => {
+      code: `export const signPayload = fortenv.string(
+  ({ PRIVATE_KEY }: SecretValues<"PRIVATE_KEY">, payload) => {
     if (!PRIVATE_KEY) throw new Error("PRIVATE_KEY is required");
     return sign(payload, PRIVATE_KEY);
   }

@@ -8,7 +8,7 @@ export function original() {
    return process.env.DATABASE_URL;
 }
 
-export const wrapped = fortenv(original);
+export const wrapped = fortenv.string(original);
 export const bound = wrapped.bind(undefined);
 
 export function forged() {

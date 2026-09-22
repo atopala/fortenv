@@ -4,8 +4,8 @@ import { fortenv } from "fortenv";
 
 // Authorized for DATABASE_URL only. The wrapper takes one business argument and
 // preserves its receiver, so the probe can confirm normal call semantics hold.
-export const read = fortenv(
-   /** @this {{ label: string }} @param {import("fortenv").SecretValues} secrets @param {string} argument */
+export const read = fortenv.string(
+   /** @this {{ label: string }} @param {import("fortenv").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets @param {string} argument */
    function (secrets, argument) {
       return (
          secrets.DATABASE_URL === "fake-hardening-database" &&

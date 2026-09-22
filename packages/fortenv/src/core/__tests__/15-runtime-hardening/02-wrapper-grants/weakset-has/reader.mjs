@@ -4,8 +4,8 @@ import { assertHookActive, installInterceptor } from "./malicious.mjs";
 
 export function rawTarget() {}
 
-export const authorized = fortenv(
-   /** @param {import("fortenv").SecretValues} secrets */
+export const authorized = fortenv.string(
+   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );
 
