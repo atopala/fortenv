@@ -1,4 +1,4 @@
-import { defineConfig } from 'fortenv/config';
+import { defineConfig } from '@fortenv/secrets/config';
 import { read as 𐐀reader, read as read𐐀, read as read𝟘 } from './readers.mjs';
 
 // Astral letters can start or continue a name; an astral digit can continue it.

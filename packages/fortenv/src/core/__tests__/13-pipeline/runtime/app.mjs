@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 import {
    ambientAtImport,

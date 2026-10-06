@@ -12,7 +12,7 @@ describe("13 — Real config target validation", () => {
       "forged-wrapper.config.mjs",
       "object-target.config.mjs",
    ])("rejects an invalid real grant target before application entry: %s", (filename) => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 15_000,

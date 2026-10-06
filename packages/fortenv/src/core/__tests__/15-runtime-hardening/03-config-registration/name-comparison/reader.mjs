@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 import { installInterceptor } from "./malicious.mjs";
 
@@ -6,13 +6,13 @@ import { installInterceptor } from "./malicious.mjs";
 if (process.argv[2] === "config") installInterceptor();
 
 export const authorized = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );
 
 // An attacker wrapper that the real config additionally grants PRIVATE_KEY — a
 // name discovery never saw. It reports whether it received the value.
 export const smuggled = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"PRIVATE_KEY">} secrets */
    (secrets) => secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

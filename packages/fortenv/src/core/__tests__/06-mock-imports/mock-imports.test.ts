@@ -4,9 +4,9 @@ import { defineConfig } from "../../../config.js";
 import { createMockLoader } from "../../mock-imports.js";
 
 describe("06 — Mock imports", () => {
-   it("returns the real validating helper only for fortenv/config", () => {
+   it("returns the real validating helper only for @fortenv/secrets/config", () => {
       const load = createMockLoader(new WeakSet());
-      const namespace = load("fortenv/config").namespace;
+      const namespace = load("@fortenv/secrets/config").namespace;
       expect(Reflect.get(namespace, "defineConfig")).toBe(defineConfig);
       expect(Object.isFrozen(namespace)).toBe(true);
       const config = { secrets: {} };

@@ -4,7 +4,7 @@ These are architectural limitations of a same-process library, **not bugs and no
 
 ## preload-capture (SEC-17)
 
-A module imported **before** `fortenv/register` (`--import preload.mjs --import fortenv/register`) reads the secret from the unguarded environment. The test documents the T0 boundary:
+A module imported **before** `@fortenv/secrets/register` (`--import preload.mjs --import @fortenv/secrets/register`) reads the secret from the unguarded environment. The test documents the T0 boundary:
 
 - `preloadReadMatched: true` — code that runs before Fortenv loads sees the raw value. Expected; this is the limitation.
 - `postLoadAmbientReadDenied: true` — after Fortenv loads, the same ambient read is denied. This is the guarantee.

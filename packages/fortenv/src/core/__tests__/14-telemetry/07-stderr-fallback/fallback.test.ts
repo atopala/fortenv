@@ -18,7 +18,7 @@ describe("14.07 — Optional stderr fallback", () => {
       ["enabled", "uncaught", true],
    ] as const)("policy=%s denial=%s observer=%s", (policy, outcome, observer) => {
       const args = observer ? ["--import", "../04-bootstrap/observe.mjs"] : [];
-      args.push("--import", "fortenv/register", "../04-bootstrap/app.mjs");
+      args.push("--import", "@fortenv/secrets/register", "../04-bootstrap/app.mjs");
       const config = policy === "omitted" ? `../04-bootstrap/${outcome}.config.mjs` : `${policy}-${outcome}.config.mjs`;
       const result = spawnSync(process.execPath, args, {
          cwd: new URL(".", import.meta.url),

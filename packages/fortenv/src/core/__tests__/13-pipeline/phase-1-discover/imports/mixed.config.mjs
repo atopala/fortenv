@@ -1,4 +1,4 @@
-import { defineConfig } from 'fortenv/config';
+import { defineConfig } from '@fortenv/secrets/config';
 import database, { createStripe as stripe } from '../application.mjs';
 
 export default defineConfig({

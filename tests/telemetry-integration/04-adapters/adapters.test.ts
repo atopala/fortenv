@@ -3,8 +3,8 @@ import { channel } from "node:diagnostics_channel";
 
 import { connectFortenv as connectOpenTelemetry } from "@fortenv/opentelemetry";
 import { connectFortenv as connectPino } from "@fortenv/pino";
+import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
 import { type LogRecord } from "@opentelemetry/api-logs";
-import { subscribeSecurityEvents } from "fortenv/telemetry";
 import pino from "pino";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

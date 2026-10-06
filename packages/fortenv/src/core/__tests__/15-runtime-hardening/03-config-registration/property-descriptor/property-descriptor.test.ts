@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.03 SEC-09 — replaced descriptor lookup cannot rewrite config grants", () => {
    it("does not grant PRIVATE_KEY through a forged data descriptor", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

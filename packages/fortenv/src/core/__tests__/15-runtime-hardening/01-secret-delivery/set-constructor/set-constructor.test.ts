@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.01 SEC-07 — a replaced Set constructor cannot poison a grant set", () => {
    it("injects only granted names when the Set constructor is replaced during config loading", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

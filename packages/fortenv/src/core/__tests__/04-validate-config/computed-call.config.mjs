@@ -1,4 +1,4 @@
-import { defineConfig } from 'fortenv/config';
+import { defineConfig } from '@fortenv/secrets/config';
 import { createDb } from '../13-pipeline/phase-1-discover/application.mjs';
 
 /** @returns {string} */

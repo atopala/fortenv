@@ -1,4 +1,4 @@
-import { defineConfig } from "fortenv/config";
+import { defineConfig } from "@fortenv/secrets/config";
 
 import { readSecret } from "./reader.mjs";
 

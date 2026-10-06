@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 import { installInterceptor } from "./malicious.mjs";
 
@@ -8,6 +8,6 @@ import { installInterceptor } from "./malicious.mjs";
 if (process.argv[2] === "config") installInterceptor();
 
 export const authorized = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets @param {string} arg */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets @param {string} arg */
    (secrets, arg) => secrets.DATABASE_URL === "fake-hardening-database" && arg === "business",
 );

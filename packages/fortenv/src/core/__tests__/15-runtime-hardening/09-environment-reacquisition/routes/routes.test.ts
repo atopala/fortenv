@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // test fails if any route leaks the secret or a child inherits it.
 describe("15.09 SEC-16 — no environment re-acquisition route reveals a protected secret", () => {
    it("denies the protected read on every env route and keeps it out of a child env", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

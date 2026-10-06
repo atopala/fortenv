@@ -1,7 +1,7 @@
 // import { ignored } from './not-an-import.mjs';
 import {
    defineConfig,
-} from "fortenv/config"
+} from "@fortenv/secrets/config"
 import {
    read /* keep this binding */, // comment inside an import
    readStripe as payment,

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { env as importedEnv } from "node:process";
 
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 // SEC-16: after bootstrap, try to re-acquire the protected secret through every
 // route that resolves to the process environment. All must be the guarded object

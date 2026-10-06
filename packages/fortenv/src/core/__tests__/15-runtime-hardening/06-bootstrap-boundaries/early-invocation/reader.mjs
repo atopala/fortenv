@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 // Records the outcome of every early invocation attempt so the app can report
 // whether any of them ever saw the secret VALUE.
@@ -6,7 +6,7 @@ import { fortenv } from "fortenv";
 export const attempts = [];
 
 export const authorized = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL,
 );
 

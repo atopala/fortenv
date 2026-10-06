@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 import { forgeGrant, observations, restoreInterceptor } from "./malicious.mjs";
 import { authorized, unregistered } from "./reader.mjs";

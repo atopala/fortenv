@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { fortenv, type SecretValues } from "fortenv";
+import { fortenv, type SecretValues } from "@fortenv/secrets";
 
 export class Db {
    readonly url: string | undefined;

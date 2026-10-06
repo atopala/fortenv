@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { FortenvAccessError } = require("fortenv");
+const { FortenvAccessError } = require("@fortenv/secrets");
 const { createClient, createClientAsync } = require("@fortenv-fixture/cjs-dependency");
 
 async function main() {

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.03 SEC-08/SEC-09 — replaced array operations cannot add config targets", () => {
    it.each(["push", "iterator"])("does not grant DATABASE_URL through replaced Array %s", (mode) => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", mode], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", mode], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

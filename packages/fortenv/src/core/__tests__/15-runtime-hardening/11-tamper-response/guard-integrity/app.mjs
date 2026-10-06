@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 // EXPLORATORY TEST — validating assumptions, not asserting an agreed contract.
 //

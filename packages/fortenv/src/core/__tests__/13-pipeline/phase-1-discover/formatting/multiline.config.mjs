@@ -1,6 +1,6 @@
 import {
    defineConfig,
-} from "fortenv/config"
+} from "@fortenv/secrets/config"
 import {
    createDb,
    createStripe as stripe,

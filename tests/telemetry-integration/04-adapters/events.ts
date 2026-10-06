@@ -1,5 +1,5 @@
-import { FortenvAccessError } from "fortenv";
-import { FortenvEnumerationError, type SecurityEvent } from "fortenv/telemetry";
+import { FortenvAccessError } from "@fortenv/secrets";
+import { FortenvEnumerationError, type SecurityEvent } from "@fortenv/secrets/telemetry";
 
 export function deniedEvent(): Extract<SecurityEvent, { name: "fortenv.access.denied" }> {
    return {

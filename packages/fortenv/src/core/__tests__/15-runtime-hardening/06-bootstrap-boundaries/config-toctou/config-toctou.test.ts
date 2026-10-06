@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // a leak of the undiscovered value is not.
 describe("15.06 SEC-20 — nondeterministic config cannot leak an undiscovered secret", () => {
    it("never exposes the real-only SECRET_TWO value", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

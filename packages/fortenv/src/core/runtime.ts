@@ -1,7 +1,7 @@
 import { normalizeName, protectEnvironment } from "../runtime/node/environment.js";
 import type { SecretEntries } from "./configuration.js";
 import { buildGrants } from "./grants.js";
-import { injectSecrets, type SecretValues } from "./injection.js";
+import { type FortenvSecrets, injectSecrets, type SecretValues } from "./injection.js";
 import {
    addWeakSetValue,
    createSet,
@@ -42,7 +42,7 @@ function installGrants(entries: SecretEntries): void {
 
 function invocationGrants(wrapper: Function): ReadonlySet<string> {
    if (phase === "uninitialized") {
-      throw new FortenvStateError("Fortenv: not initialized; start Node with --import fortenv/register.");
+      throw new FortenvStateError("Fortenv: not initialized; start Node with --import @fortenv/secrets/register.");
    }
    if (phase !== "ready") {
       throw new FortenvStateError(`Fortenv: wrapped functions cannot run while configuration is ${phase}.`);
@@ -61,10 +61,12 @@ function invocationGrants(wrapper: Function): ReadonlySet<string> {
 export class Fortenv<T extends string = string> {
    /**
     * Wrap a callable; permission comes only from the loaded configuration. Business
-    * arguments, `this` and the result type are inferred from the callback.
+    * arguments, `this` and the result type are inferred from the callback. The secrets
+    * parameter defaults to `SecretValues<T>` but can be narrowed via a parameter
+    * annotation (`(s: SecretValues<"KEY">) => …`).
     */
-   string<This, Args extends unknown[], Result>(
-      fn: (this: This, secrets: SecretValues<T>, ...args: Args) => Result,
+   string<This, Args extends unknown[], Result, S extends SecretValues<string> = SecretValues<T>>(
+      fn: (this: This, secrets: S, ...args: Args) => Result,
    ): (this: This, ...args: Args) => Result {
       if (typeof fn !== "function" || isGeneratorFunction(fn)) {
          throw new FortenvUsageError("Fortenv: expected an ordinary synchronous or async function, not a generator.");
@@ -83,8 +85,8 @@ export class Fortenv<T extends string = string> {
    }
 }
 
-/** Default loose instance; secret keys can be typed per callback or via `new Fortenv<Keys>()`. */
-export const fortenv = new Fortenv();
+/** Default instance. When `FortenvSecretKeys` is augmented, `s` is typed with those keys automatically. */
+export const fortenv = new Fortenv<FortenvSecrets>();
 
 async function initialize(): Promise<void> {
    beginBootstrap();

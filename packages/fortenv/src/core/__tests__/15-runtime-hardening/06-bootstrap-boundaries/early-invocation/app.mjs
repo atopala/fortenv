@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 import { attempts, authorized } from "./reader.mjs";
 

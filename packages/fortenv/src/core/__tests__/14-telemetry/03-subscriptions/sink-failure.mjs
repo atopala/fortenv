@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import * as telemetry from "fortenv/telemetry";
+import * as telemetry from "@fortenv/secrets/telemetry";
 
 import { createEnvironmentGuard } from "../../../../../dist/runtime/node/environment.js";
 const mode = process.argv[2];

@@ -1,4 +1,4 @@
-import { subscribeSecurityEvents } from "fortenv/telemetry";
+import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
 import { type Logger } from "pino";
 
 /** Connect a caller-owned logger. Returns an idempotent disconnect. */

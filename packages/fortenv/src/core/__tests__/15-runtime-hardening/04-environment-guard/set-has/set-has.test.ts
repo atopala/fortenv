@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.04 SEC-10 — replaced Set.has cannot disable environment protection", () => {
    it("continues denying protected reads and writes and hiding the protected name", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

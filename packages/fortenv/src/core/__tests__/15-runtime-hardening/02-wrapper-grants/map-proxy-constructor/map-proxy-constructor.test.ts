@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // grant. The test fails if a secret leaks or the unregistered wrapper gets one.
 describe("15.02 SEC-07 — replaced Map/Proxy constructors cannot leak secrets or forge grants", () => {
    it("holds authorization and denial when Map/Proxy are replaced at config time", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

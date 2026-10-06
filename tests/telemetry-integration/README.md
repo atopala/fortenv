@@ -4,7 +4,7 @@ For implementation ownership, fixture rules and focused commands, read [CONTEXT.
 
 This private test project tests the standalone `@fortenv/pino` and `@fortenv/opentelemetry` adapters with real loggers and SDKs. The Fortenv library has no runtime, peer, optional, Pino or OpenTelemetry dependencies. Its development dependencies are Node typings and TypeScript.
 
-Workspace dependencies resolve public exports to the core and adapter packages' `dist` directories. Child processes use native Node imports and `--import fortenv/register`, without Vitest transforms or source aliases. The application fixtures can also be run directly from this directory after running the root build and setting a fake `DATABASE_URL`.
+Workspace dependencies resolve public exports to the core and adapter packages' `dist` directories. Child processes use native Node imports and `--import @fortenv/secrets/register`, without Vitest transforms or source aliases. The application fixtures can also be run directly from this directory after running the root build and setting a fake `DATABASE_URL`.
 
 ## Scenarios
 

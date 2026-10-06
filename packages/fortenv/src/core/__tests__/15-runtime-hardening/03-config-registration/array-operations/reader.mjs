@@ -1,14 +1,14 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 import { installIteratorInterceptor, installPushInterceptor } from "./malicious.mjs";
 
 export const authorized = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );
 
 export const unregistered = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );
 

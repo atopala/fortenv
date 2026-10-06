@@ -6,7 +6,7 @@ describe("15.08 SEC-18 — prototype pollution cannot leak secrets or forge gran
    it.each(["objectData", "arrayIndex"])(
       "keeps injection and grants clean when prototypes are polluted (%s)",
       (vector) => {
-         const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", vector], {
+         const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", vector], {
             cwd: new URL(".", import.meta.url),
             encoding: "utf8",
             timeout: 10_000,

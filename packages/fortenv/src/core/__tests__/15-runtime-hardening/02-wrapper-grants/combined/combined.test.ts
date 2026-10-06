@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.02 SEC-05+SEC-06 — combined grant-redirect and iteration-expansion tampering", () => {
    it("closes both routes at once during config-time replacement", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

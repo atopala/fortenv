@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 
 import { connectFortenv } from "@fortenv/opentelemetry";
+import { FortenvAccessError } from "@fortenv/secrets";
 import { context, ROOT_CONTEXT, trace, TraceFlags } from "@opentelemetry/api";
 import { logs } from "@opentelemetry/api-logs";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { InMemoryLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs";
-import { FortenvAccessError } from "fortenv";
 
 import { readSecret } from "../reader.mjs";
 

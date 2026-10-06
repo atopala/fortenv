@@ -4,7 +4,7 @@
 // two phases — a non-deterministic (TOCTOU) config.
 import "./side-effect.mjs";
 
-import { defineConfig } from "fortenv/config";
+import { defineConfig } from "@fortenv/secrets/config";
 
 import { authorized } from "./reader.mjs";
 

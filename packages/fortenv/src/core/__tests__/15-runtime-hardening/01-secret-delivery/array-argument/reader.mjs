@@ -1,11 +1,11 @@
 import "./malicious.mjs";
 
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 // Authorized for DATABASE_URL only. The wrapper takes one business argument and
 // preserves its receiver, so the probe can confirm normal call semantics hold.
 export const read = fortenv.string(
-   /** @this {{ label: string }} @param {import("fortenv").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets @param {string} argument */
+   /** @this {{ label: string }} @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets @param {string} argument */
    function (secrets, argument) {
       return (
          secrets.DATABASE_URL === "fake-hardening-database" &&

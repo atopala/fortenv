@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { Writable } from "node:stream";
 
 import { connectFortenv } from "@fortenv/pino";
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 import pino from "pino";
 
 import { readSecret } from "../reader.mjs";

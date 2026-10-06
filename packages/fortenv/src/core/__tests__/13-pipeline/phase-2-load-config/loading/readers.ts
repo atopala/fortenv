@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { fortenv, type SecretValues } from "fortenv";
+import { fortenv, type SecretValues } from "@fortenv/secrets";
 
 import { importTimeReads } from "./malicious.mjs";
 export { importTimeReads };

@@ -6,7 +6,7 @@ describe("14.04 — Telemetry during real config loading", () => {
    it.each(["caught", "uncaught"])("reports %s import-time denial before the application can start", (mode) => {
       const result = spawnSync(
          process.execPath,
-         ["--import", "./observe.mjs", "--import", "fortenv/register", "app.mjs"],
+         ["--import", "./observe.mjs", "--import", "@fortenv/secrets/register", "app.mjs"],
          {
             cwd: new URL(".", import.meta.url),
             encoding: "utf8",

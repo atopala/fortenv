@@ -1,4 +1,4 @@
-import { defineConfig } from "fortenv/config";
+import { defineConfig } from "@fortenv/secrets/config";
 
 import { captured, createDb, echo, fail, later, outer, result, snapshot } from "./factories.ts";
 export default defineConfig({

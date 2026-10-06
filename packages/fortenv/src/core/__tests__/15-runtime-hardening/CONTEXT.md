@@ -205,7 +205,7 @@ Fixture `03-config-registration/name-comparison` neutralizes the `Array.prototyp
 
 ### SEC-14 — package export surface held
 
-Fixture `07-package-boundaries/export-surface` deep-scans every public namespace (`fortenv`, `fortenv/config`, `fortenv/telemetry`) and finds no secret value or live store; internal dist subpath imports (`fortenv/dist/core/runtime.js`, etc.) are refused by the exports map; no exported helper installs a grant for an attacker wrapper. Root exports are exactly the intended API.
+Fixture `07-package-boundaries/export-surface` deep-scans every public namespace (`fortenv`, `@fortenv/secrets/config`, `@fortenv/secrets/telemetry`) and finds no secret value or live store; internal dist subpath imports (`fortenv/dist/core/runtime.js`, etc.) are refused by the exports map; no exported helper installs a grant for an attacker wrapper. Root exports are exactly the intended API.
 
 ### SEC-15 — discovery does not execute app imports before protection
 
@@ -217,7 +217,7 @@ Fixture `09-environment-reacquisition/routes` confirms every route to the enviro
 
 ### SEC-17 — documented limitations (control)
 
-Fixture `12-limitations/preload-capture` documents the T0 boundary: a module imported before `fortenv/register` reads the raw value (the limitation), while the post-load ambient read is denied (the guarantee). See `12-limitations/CONTEXT.md` for the Linux `/proc/self/environ`, explicit-handoff, accessible-wrapper, and shared-heap limitations. These are architectural, not fixable in V1.
+Fixture `12-limitations/preload-capture` documents the T0 boundary: a module imported before `@fortenv/secrets/register` reads the raw value (the limitation), while the post-load ambient read is denied (the guarantee). See `12-limitations/CONTEXT.md` for the Linux `/proc/self/environ`, explicit-handoff, accessible-wrapper, and shared-heap limitations. These are architectural, not fixable in V1.
 
 ### SEC-10a — not implemented (by design)
 

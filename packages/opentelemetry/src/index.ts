@@ -1,5 +1,5 @@
+import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
 import { type Logger, SeverityNumber } from "@opentelemetry/api-logs";
-import { subscribeSecurityEvents } from "fortenv/telemetry";
 
 /** Connect a caller-owned logger. Returns an idempotent disconnect. */
 export function connectFortenv(logger: Logger): () => void {

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // The test fails if denial stops holding or any protected name/value surfaces.
 describe("15.04 SEC-10 — replacing guard-trap operations cannot defeat denial", () => {
    it("keeps protected reads denied and enumeration hiding protected names", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

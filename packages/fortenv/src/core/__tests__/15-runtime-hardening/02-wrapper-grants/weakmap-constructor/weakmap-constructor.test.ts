@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.02 SEC-07 — a replaced WeakMap constructor cannot expose the grant registry", () => {
    it("keeps the registry private when the constructor is replaced during config loading", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

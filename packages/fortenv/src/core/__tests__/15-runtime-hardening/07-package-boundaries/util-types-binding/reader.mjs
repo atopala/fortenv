@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 import { installInterceptor } from "./malicious.mjs";
 
@@ -12,7 +12,7 @@ if (process.argv[2] === "config") installInterceptor();
 export let generatorWrapResult;
 try {
    const wrapped = fortenv.string(
-      /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+      /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
       // eslint-disable-next-line require-yield
       function* (secrets) {
          return secrets.DATABASE_URL;
@@ -25,6 +25,6 @@ try {
 
 // A normal wrapper that is granted the secret, for contrast.
 export const authorized = fortenv.string(
-   /** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database",
 );

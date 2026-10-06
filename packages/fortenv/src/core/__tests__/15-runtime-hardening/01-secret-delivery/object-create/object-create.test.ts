@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.01 SEC-02 — Object.create cannot intercept secret assignment", () => {
    it.each(["config", "runtime"])("protects injection when replacement occurs during %s", (mode) => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", mode], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", mode], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

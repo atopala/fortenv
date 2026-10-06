@@ -38,11 +38,11 @@
       "typecheck": "tsc -p tsconfig.json --noEmit"
    },
    "peerDependencies": {
-      "fortenv": "^0.1.0",
+      "@fortenv/secrets": "^0.1.0",
       "pino": "^10.3.1"
    },
    "devDependencies": {
-      "fortenv": "workspace:*",
+      "@fortenv/secrets": "workspace:*",
       "pino": "^10.3.1",
       "@types/node": "^22.20.2",
       "typescript": "^7.0.2"

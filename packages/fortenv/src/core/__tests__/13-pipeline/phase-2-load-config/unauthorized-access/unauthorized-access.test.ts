@@ -6,7 +6,7 @@ import { environment } from "../test-environment.js";
 
 describe("13 — Unauthorized import-time secret access", () => {
    it("throws on a direct secret read and stops module initialization before the app starts", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 15_000,

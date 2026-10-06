@@ -1,4 +1,4 @@
-import { defineConfig } from 'fortenv/config';
+import { defineConfig } from '@fortenv/secrets/config';
 import { createDb } from '../13-pipeline/phase-1-discover/application.mjs';
 
 // Config execution errors must be reported with their original cause.

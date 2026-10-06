@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 import { installInterceptor, observations, restoreInterceptor } from "./malicious.mjs";
 import { read } from "./reader.mjs";

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // fails if the harvest captures a real secret value.
 describe("15.01 SEC-03/06 — siphoning Set/Map methods cannot capture the injected secret", () => {
    it("routes injection through captured intrinsics so the harvest stays empty", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

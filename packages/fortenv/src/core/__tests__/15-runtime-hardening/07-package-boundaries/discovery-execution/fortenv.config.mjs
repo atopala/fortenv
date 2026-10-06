@@ -3,7 +3,7 @@
 // phase-2 import, after protection is installed.
 import "./marker.mjs";
 
-import { defineConfig } from "fortenv/config";
+import { defineConfig } from "@fortenv/secrets/config";
 
 import { authorized } from "./reader.mjs";
 

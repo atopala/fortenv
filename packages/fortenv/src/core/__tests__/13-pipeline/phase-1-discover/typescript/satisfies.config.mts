@@ -1,4 +1,4 @@
-import { defineConfig, type FortenvConfig } from 'fortenv/config';
+import { defineConfig, type FortenvConfig } from '@fortenv/secrets/config';
 import { createDb } from '../application-types.ts';
 
 export default defineConfig({

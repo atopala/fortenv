@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
+import { FortenvAccessError } from "@fortenv/secrets";
 import { createClient, createClientAsync } from "@fortenv-fixture/cjs-dependency";
-import { FortenvAccessError } from "fortenv";
 
 async function main() {
    /** @param {unknown} error */

@@ -1,6 +1,6 @@
 # Core implementation map
 
-Read the [design](../../docs/design.md) alongside the [numbered tests](./__tests__/CONTEXT.md). Stage functions are internal source-module exports for composition and testing. The root `fortenv` entry exports the wrapper, `FortenvAccessError`, and injection types. Config, preload, and telemetry use `fortenv/config`, `fortenv/register`, and `fortenv/telemetry`; the private secret map and installed ACL are not public APIs.
+Read the [design](../../docs/design.md) alongside the [numbered tests](./__tests__/CONTEXT.md). Stage functions are internal source-module exports for composition and testing. The root `fortenv` entry exports the wrapper, `FortenvAccessError`, and injection types. Config, preload, and telemetry use `@fortenv/secrets/config`, `@fortenv/secrets/register`, and `@fortenv/secrets/telemetry`; the private secret map and installed ACL are not public APIs.
 
 ## Current call path
 
@@ -63,7 +63,7 @@ Denied reads construct `FortenvAccessError`, publish synchronously on `fortenv.s
 | 11    | [loadConfiguration / matchingNames](bootstrap.ts), [buildGrants](grants.ts)   | real config → validated exact identities → ACL                                       |
 | 12    | [injectSecrets](injection.ts), [fortenv](runtime.ts)                          | allowed names + captured values → frozen injection → callback result                 |
 
-The loader is synchronous, but rewritten imports await its envelope. The envelope prevents a mocked export called `then` from being treated as a promise's `then` method. `fortenv/config` receives the real validating helper, which preserves the config's identity; application exports receive placeholders. Phase-one placeholders are never real ACL identities.
+The loader is synchronous, but rewritten imports await its envelope. The envelope prevents a mocked export called `then` from being treated as a promise's `then` method. `@fortenv/secrets/config` receives the real validating helper, which preserves the config's identity; application exports receive placeholders. Phase-one placeholders are never real ACL identities.
 
 ## Boundaries and limitations
 

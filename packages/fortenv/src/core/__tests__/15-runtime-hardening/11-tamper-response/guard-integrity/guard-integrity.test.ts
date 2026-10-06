@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 // for human review to decide whether any new enforcement is warranted.
 describe("15.11 SEC-23/24 (exploratory) — process.env guard integrity under tampering", () => {
    it("keeps protected reads denied and leaks no value across guard-tamper attempts", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

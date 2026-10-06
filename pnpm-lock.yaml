@@ -277,27 +277,27 @@ importers:
 
   packages/opentelemetry:
     devDependencies:
+      '@fortenv/secrets':
+        specifier: workspace:*
+        version: link:../fortenv
       '@opentelemetry/api-logs':
         specifier: ^0.222.0
         version: 0.222.0
       '@types/node':
         specifier: ^22.20.2
         version: 22.20.2
-      fortenv:
-        specifier: workspace:*
-        version: link:../fortenv
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
 
   packages/pino:
     devDependencies:
+      '@fortenv/secrets':
+        specifier: workspace:*
+        version: link:../fortenv
       '@types/node':
         specifier: ^22.20.2
         version: 22.20.2
-      fortenv:
-        specifier: workspace:*
-        version: link:../fortenv
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -313,12 +313,12 @@ importers:
       '@fortenv-fixture/esm-dependency':
         specifier: workspace:*
         version: link:../fixtures/esm-dependency
+      '@fortenv/secrets':
+        specifier: workspace:*
+        version: link:../../packages/fortenv
       '@types/node':
         specifier: ^22.20.2
         version: 22.20.2
-      fortenv:
-        specifier: workspace:*
-        version: link:../../packages/fortenv
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -331,25 +331,25 @@ importers:
       '@fortenv-fixture/esm-dependency':
         specifier: workspace:*
         version: link:../fixtures/esm-dependency
+      '@fortenv/secrets':
+        specifier: workspace:*
+        version: link:../../packages/fortenv
       '@types/node':
         specifier: ^22.20.2
         version: 22.20.2
-      fortenv:
-        specifier: workspace:*
-        version: link:../../packages/fortenv
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
 
   tests/fixtures/cjs-dependency:
     devDependencies:
-      fortenv:
+      '@fortenv/secrets':
         specifier: workspace:*
         version: link:../../../packages/fortenv
 
   tests/fixtures/esm-dependency:
     devDependencies:
-      fortenv:
+      '@fortenv/secrets':
         specifier: workspace:*
         version: link:../../../packages/fortenv
 
@@ -361,6 +361,9 @@ importers:
       '@fortenv/pino':
         specifier: workspace:*
         version: link:../../packages/pino
+      '@fortenv/secrets':
+        specifier: workspace:*
+        version: link:../../packages/fortenv
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -376,9 +379,6 @@ importers:
       '@types/node':
         specifier: ^22.20.2
         version: 22.20.2
-      fortenv:
-        specifier: workspace:*
-        version: link:../../packages/fortenv
       pino:
         specifier: ^10.3.1
         version: 10.3.1

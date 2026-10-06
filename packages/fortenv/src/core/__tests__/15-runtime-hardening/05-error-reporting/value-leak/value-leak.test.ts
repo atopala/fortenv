@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // documented; values may not.
 describe("15.05 SEC-22 — no diagnostic path leaks a secret value", () => {
    it("keeps fake values out of every error, stack, event, and validation message", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

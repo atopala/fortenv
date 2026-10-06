@@ -22,7 +22,7 @@ Access-denied events contain `version: 1`, `name: "fortenv.access.denied"`, `sev
 
 `FortenvAccessError` belongs to the root `fortenv` runtime API. The telemetry subpath does not re-export it. `FortenvEnumerationError` and `SecurityEvent` remain telemetry-specific exports.
 
-The `fortenv/telemetry` export provides:
+The `@fortenv/secrets/telemetry` export provides:
 
 ```ts
 subscribeSecurityEvents(listener): () => void;

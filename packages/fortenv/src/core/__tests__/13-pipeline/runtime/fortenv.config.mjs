@@ -1,4 +1,4 @@
-import { defineConfig } from "fortenv/config";
+import { defineConfig } from "@fortenv/secrets/config";
 
 import { concurrentA, detached, outer, readA, rejects, throws } from "./readers.ts";
 import { concurrentB, readB } from "./readers.ts";

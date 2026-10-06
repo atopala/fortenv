@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 
 import { connectFortenv as connectOpenTelemetry } from "@fortenv/opentelemetry";
 import { connectFortenv as connectPino } from "@fortenv/pino";
+import { FortenvAccessError } from "@fortenv/secrets";
+import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
 import { LoggerProvider } from "@opentelemetry/sdk-logs";
-import { FortenvAccessError } from "fortenv";
-import { subscribeSecurityEvents } from "fortenv/telemetry";
 import pino from "pino";
 
 let calls = 0;

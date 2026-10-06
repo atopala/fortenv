@@ -1,5 +1,5 @@
 {
-   "name": "fortenv",
+   "name": "@fortenv/secrets",
    "version": "0.1.0",
    "description": "Remove ambient access to environment secrets with explicit function grants",
    "author": "Adrian Topala (https://github.com/atopala)",

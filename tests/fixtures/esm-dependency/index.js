@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 class Client {
    /** @param {string | undefined} url @param {boolean} probe */

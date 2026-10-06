@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { setImmediate as nextTurn } from "node:timers/promises";
 
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 export let calls = 0;
 
-/** @param {import("fortenv").SecretValues<"DATABASE_URL">} secrets */
+/** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL">} secrets */
 function original(secrets) {
    calls++;
    return secrets.DATABASE_URL;

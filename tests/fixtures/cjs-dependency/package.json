@@ -8,6 +8,6 @@
       "./import-time": "./import-time.js"
    },
    "devDependencies": {
-      "fortenv": "workspace:*"
+      "@fortenv/secrets": "workspace:*"
    }
 }

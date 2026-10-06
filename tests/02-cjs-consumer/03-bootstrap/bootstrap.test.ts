@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("CJS consumer bootstrap boundaries", () => {
    function run(app: string, preload = true, config?: string) {
-      const result = spawnSync(process.execPath, [...(preload ? ["--import", "fortenv/register"] : []), app], {
+      const result = spawnSync(process.execPath, [...(preload ? ["--import", "@fortenv/secrets/register"] : []), app], {
          cwd: __dirname,
          encoding: "utf8",
          timeout: 15_000,

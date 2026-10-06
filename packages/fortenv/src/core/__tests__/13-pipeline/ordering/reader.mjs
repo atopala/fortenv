@@ -1,4 +1,4 @@
-import { fortenv } from "fortenv";
+import { fortenv } from "@fortenv/secrets";
 
 // Only real phase-two evaluation can reach this marker.
 Reflect.get(globalThis, Symbol.for("fortenv.test.pipeline-events"))?.push("11: real reader evaluated");

@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // captures a real secret value.
 describe("15.02 SEC-07/08 — a siphoning Map/Proxy cannot capture the injected secret", () => {
    it("keeps the secret out of the attacker's harvest even while wrapping the apply trap", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

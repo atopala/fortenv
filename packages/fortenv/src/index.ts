@@ -1,4 +1,4 @@
-export type { SecretValues } from "./core/injection.js";
+export type { FortenvSecretKeys, FortenvSecrets, SecretValues } from "./core/injection.js";
 export { Fortenv, fortenv } from "./core/runtime.js";
 export {
    FortenvAccessError,

@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "fortenv";
+import { FortenvAccessError } from "@fortenv/secrets";
 
 const g = /** @type {Record<string, unknown>} */ (globalThis);
 

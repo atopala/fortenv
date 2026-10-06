@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // denial failure, or a process crash fails this test (red).
 describe("15.10 SEC-13 — hostile telemetry observers cannot steal secrets or break denial", () => {
    it("contains observer misbehavior with no value leak and denial intact", () => {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

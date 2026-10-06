@@ -14,7 +14,7 @@ describe("15.12 SEC-17 — pre-load access is a documented limitation, post-load
       const preload = new URL("./preload-capture.mjs", import.meta.url);
       const result = spawnSync(
          process.execPath,
-         ["--import", preload.href, "--import", "fortenv/register", "app.mjs"],
+         ["--import", preload.href, "--import", "@fortenv/secrets/register", "app.mjs"],
          {
             cwd: new URL(".", import.meta.url),
             encoding: "utf8",

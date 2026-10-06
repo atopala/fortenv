@@ -6,7 +6,7 @@ describe("04 — Adapter failure isolation", () => {
    it.each(["pino", "opentelemetry"])("keeps denying access when %s throws", (adapter) => {
       const result = spawnSync(
          process.execPath,
-         ["--import", "fortenv/register", "04-adapters/sink-failure.mjs", adapter],
+         ["--import", "@fortenv/secrets/register", "04-adapters/sink-failure.mjs", adapter],
          {
             cwd: new URL("..", import.meta.url),
             encoding: "utf8",

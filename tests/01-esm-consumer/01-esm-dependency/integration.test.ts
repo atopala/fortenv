@@ -4,19 +4,23 @@ import { describe, expect, it } from "vitest";
 
 describe("ESM consumer → ESM dependency", () => {
    function run(app: string, mode?: string, config?: string) {
-      const result = spawnSync(process.execPath, ["--import", "fortenv/register", app, ...(mode ? [mode] : [])], {
-         cwd: new URL(".", import.meta.url),
-         encoding: "utf8",
-         timeout: 15_000,
-         env: {
-            PATH: process.env.PATH,
-            ...(process.platform === "win32" ? { SystemRoot: process.env.SystemRoot } : {}),
-            NODE_ENV: "test",
-            DATABASE_URL: "fake-module-secret",
-            OTHER_SECRET: "fake-other-secret",
-            ...(config ? { FORTENV_CONFIG: config } : {}),
+      const result = spawnSync(
+         process.execPath,
+         ["--import", "@fortenv/secrets/register", app, ...(mode ? [mode] : [])],
+         {
+            cwd: new URL(".", import.meta.url),
+            encoding: "utf8",
+            timeout: 15_000,
+            env: {
+               PATH: process.env.PATH,
+               ...(process.platform === "win32" ? { SystemRoot: process.env.SystemRoot } : {}),
+               NODE_ENV: "test",
+               DATABASE_URL: "fake-module-secret",
+               OTHER_SECRET: "fake-other-secret",
+               ...(config ? { FORTENV_CONFIG: config } : {}),
+            },
          },
-      });
+      );
       expect(result.error).toBeUndefined();
       expect(result.signal).toBeNull();
       expect(result.stdout + result.stderr).not.toContain("fake-module-secret");
