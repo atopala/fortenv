@@ -105,6 +105,7 @@ jobs:
                  packages/fortenv/package.json
                  packages/fortenv/dist/
                  packages/fortenv/README.md
+                 packages/fortenv/DISCLOSURE
                  packages/fortenv/LICENSE
                  packages/fortenv/docs/design.md
 

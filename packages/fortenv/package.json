@@ -29,6 +29,9 @@
       "lint:fix": "eslint . --fix"
    },
    "license": "Apache-2.0",
+   "contentPolicy": {
+      "class": "dual-use"
+   },
    "type": "module",
    "types": "./dist/index.d.ts",
    "sideEffects": [
@@ -36,6 +39,7 @@
    ],
    "files": [
       "dist",
+      "DISCLOSURE",
       "LICENSE",
       "README.md"
    ],

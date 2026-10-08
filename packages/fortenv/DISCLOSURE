@@ -1,0 +1,7 @@
+Fortenv is a defensive security library for Node.js applications.
+
+It restricts ambient access to configured secrets in process.env, delivers selected secrets to explicitly registered functions, and reports denied access attempts through a dependency-free telemetry interface. Its implementation uses Node.js module loading, source transformation, proxies, and runtime integrity checks. These capabilities may resemble techniques that also appear in security research or malicious software.
+
+Fortenv is intended to help application developers reduce the exposure of environment secrets to unrelated or compromised dependencies running in the same Node.js process. It does not provide a sandbox or an operating-system security boundary. Code can still obtain a secret when the application explicitly passes it, exposes an authorized wrapper, allows access before Fortenv starts, or exposes the startup environment through operating-system facilities such as Linux /proc/self/environ.
+
+The source repository includes adversarial tests that exercise these boundaries. Those tests exist to validate defensive behavior and are not included in the published package.

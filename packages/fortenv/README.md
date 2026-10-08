@@ -1,12 +1,16 @@
 # Fortenv
 
-Remove configured secrets from ambient `process.env` access and inject them only into explicitly registered functions.
+Keep environment secrets out of `process.env`. Give each function only the credentials it needs.
 
-**Node.js 22.23.2+ · ESM · Zero runtime dependencies**
+**Node.js 22.23.2+ · Zero runtime dependencies**
 
-## Development status and pipeline tests
+After Fortenv's preload runs:
 
-See the [design](docs/design.md), [core pipeline map](src/core/CONTEXT.md) and [numbered test guide](src/core/__tests__/CONTEXT.md) for each stage, runnable snapshots and test coverage. The explicit injection contract was implemented test first.
+- Reading a configured secret through `process.env` throws, including inside dependencies and authorized callbacks.
+- Environment dumps such as `{ ...process.env }` and `JSON.stringify(process.env)` omit protected keys and values.
+- Only the wrappers listed in your config receive those secrets, as an explicit callback argument.
+
+Other environment variables work normally. Fortenv adds a layer of protection against accidental leaks and dependencies that read the environment. **It is not a sandbox for hostile code.** See [how protection can be bypassed](#security-boundaries-and-bypasses).
 
 ## Quick start
 
@@ -14,7 +18,7 @@ See the [design](docs/design.md), [core pipeline map](src/core/CONTEXT.md) and [
 npm install @fortenv/core
 ```
 
-Wrap a factory that receives its credential:
+**1. Wrap a factory.** Replace `DatabaseClient` with your database driver's client.
 
 ```js
 // db.mjs
@@ -27,7 +31,7 @@ export const createDb = fortenv.string(({ DATABASE_URL }) => {
 });
 ```
 
-Register that exact wrapper in configuration:
+**2. Grant that wrapper access.**
 
 ```js
 // fortenv.config.mjs
@@ -41,295 +45,86 @@ export default defineConfig({
 });
 ```
 
-Initialize the application after preload:
+**3. Call it from your application.**
 
 ```js
 // app.mjs
 import { createDb } from "./db.mjs";
 
-const db = createDb(); // DATABASE_URL is injected into the callback
-// A direct process.env.DATABASE_URL read here would throw an unauthorized-access error.
+const db = createDb(); // Fortenv supplies the credential.
+// process.env.DATABASE_URL would throw, here and inside DatabaseClient.
 ```
 
 ```sh
 node --import @fortenv/core/register app.mjs
 ```
 
-Provide environment values before starting Node, using your existing deployment or environment-loading setup. Fortenv does not load `.env` files, validate values, or retrieve credentials from a secret manager.
+Provide secrets through your existing environment setup before Node starts. Fortenv does not load `.env` files, validate secret values, or fetch them from a secret manager.
 
-## Public API
+## How grants work
 
-- `fortenv.string(fn)` returns the wrapper and injects a readonly secrets object as the callback's first argument. Callers pass only subsequent business arguments. `fortenv` is a default instance of the exported `Fortenv` class; when `FortenvSecretKeys` is augmented the default instance types `s` automatically; otherwise it stays loose. Secret keys can also be typed via a `SecretValues<Keys>` parameter annotation (`fortenv.string((s: SecretValues<"DATABASE_URL">) => …)`) or a typed instance (`new Fortenv<"DATABASE_URL">()`); all are typing aids only, erased at runtime and not verified against configuration. Wrapping alone grants nothing; configuration is the sole grant authority and the sole source of secret names. (`fortenv.buffer` and `fortenv.secret` delivery forms are forthcoming.)
-- `FortenvAccessError` is exported from `fortenv` for identifying denied protected-environment reads. `FortenvConfigError`, `FortenvStateError`, and `FortenvUsageError` are also exported for invalid configuration, invalid runtime state (calls before initialization), and invalid usage (an unsupported wrapped-function kind or a protected mutation); each carries a stable `code` (`FORTENV_CONFIG_INVALID`, `FORTENV_INVALID_STATE`, `FORTENV_INVALID_USAGE`). `FortenvUsageError` extends `TypeError`.
-- `defineConfig({ secrets, telemetry? })` validates the config shape, secret names, function arrays and telemetry flags at runtime, then returns the original config. Calling it does not install or change permissions.
-- `@fortenv/core/register` is the preload entry point. Ordinary imports of `@fortenv/core` and `@fortenv/core/config` do not bootstrap the process.
-- `@fortenv/core/telemetry` exports `subscribeSecurityEvents`, `SecurityEvent`, and `FortenvEnumerationError`. Connecting an observer does not bootstrap the process or grant access.
+Configuration authorizes the **exact function returned by `fortenv.string()`**. Names, file paths, TypeScript types, and the identity of the caller grant no access. Wrapping a function alone grants nothing.
 
-One secret can have several readers, and one reader can access several secrets. An empty reader array denies access to a secret for everyone. An empty `secrets` object protects nothing. A granted missing value is an own injected property containing `undefined`; ungranted keys are absent. All direct protected environment reads throw, even when the value is absent.
+- A wrapper can receive several secrets; a secret can be granted to several wrappers. `SECRET: []` protects a key without granting it to anyone.
+- Each call receives a fresh, frozen object with only its granted keys. Missing values are `undefined`; ungranted keys are absent. Callers pass only the callback's remaining business arguments.
+- Helpers and nested wrappers inherit no access. Pass a dependency only the specific credential it needs.
+- Sync and async callbacks are supported; arguments, `this`, return values, Promises, and thrown errors are preserved.
 
-Use the exact function returned by `fortenv.string()`, rather than its original function, a new wrapper, a bound copy, a name, or a file path. Raw functions in config are rejected. Calling a wrapper without preload or before initialization finishes throws. After initialization, an unregistered wrapper executes with an empty grant: protected reads throw an unauthorized-access error, even when called inside an authorized wrapper.
+The guard also rejects changes to protected keys and replacement of `process.env`. Protection covers only configured names; `secrets: {}` protects nothing. There is no runtime reload or secret rotation in V1.
 
-## Using with TypeScript
+## Security boundaries and bypasses
 
-Fortenv offers three ways to type the injected `secrets` object. Pick the one that matches how precisely you want to track per-wrapper grants.
+**Fortenv controls environment access and credential delivery. It cannot isolate arbitrary code in the same process.** Secrets can still escape through:
 
-### Option 1 — Global key declaration (write keys once)
+- **Code that runs earlier.** A preload, loader, or startup tool can copy values or tamper with built-ins before Fortenv initializes. Start Fortenv before untrusted code.
+- **OS or native access.** On Linux, `/proc/self/environ` may still contain startup secrets after `process.env` is scrubbed. Filesystem reads, native addons, debuggers, and memory dumps are outside Fortenv's protection.
+- **Explicitly shared values.** A database driver given `DATABASE_URL` can retain or leak it. Returned values, logs, and captured strings cannot be revoked, even after the callback finishes.
+- **Accessible authorized wrappers.** Any code that can call a registered wrapper can exercise its behavior. Fortenv does not authenticate callers; a wrapper that returns a secret exposes it to its caller.
+- **Runtime tampering beyond the tested hardening.** Fortenv captures selected built-in operations before config dependencies load to resist specific replacement attacks. This is not a guarantee against every same-process attack or direct access to internal files.
 
-Declare your secret key names once in a project-level `.d.ts` file:
+The configuration, Fortenv installation, and bootstrap environment must be trusted. Use process or OS isolation when you need a boundary against hostile code. See the [security model and hardening scope](https://github.com/atopala/fortenv/blob/main/packages/fortenv/docs/design.md#2-security-scope).
 
-```ts
-// fortenv.d.ts
-declare module "@fortenv/core" {
-   interface FortenvSecretKeys {
-      DATABASE_URL: unknown;
-      STRIPE_SECRET_KEY: unknown;
-   }
-}
-export {};
-```
+## Startup and compatibility
 
-The default `fortenv` instance now types `s` with all declared keys automatically — no annotation needed at each wrapper:
+Fortenv discovers protected names without executing application imports, captures and removes their values from the original environment, then loads the real config to register wrappers.
 
-```ts
-import { fortenv } from "@fortenv/core";
+- **Keep initialization out of the config's imports.** Modules imported by config should define factories, not call them. Call factories from the application after preload. Keep the application entry point out of that import graph, including through circular imports; early wrapper calls throw.
+- **Keep config simple and deterministic.** Its body executes twice. Use imported wrappers as grant references and names independent of imports, environment, time, or randomness. The discovery VM is not a hostile-config sandbox. See [supported config syntax](https://github.com/atopala/fortenv/blob/main/packages/fortenv/docs/design.md#35-imported-values-and-unsupported-loading).
+- **Use ESM config.** Fortenv looks for one `fortenv.config.ts`, `.mts`, `.js`, or `.mjs` in the working directory. `FORTENV_CONFIG` selects another path. Use `.mjs` or `.mts` in CommonJS projects. TypeScript must use Node's native type-strippable syntax and resolvable imports; Fortenv does not implement path aliases.
+- **Share module identities.** Config and application must use the same loaded Fortenv package and wrapper objects. Arbitrary bundling and automatic framework integration are unsupported. V1 targets Node; Bun, Deno, and edge runtimes are unsupported.
+- **Set up workers separately.** The guard applies to the thread that initializes it. Workers and child processes receive no automatic grants or captured secrets. Normal environment inheritance after scrubbing omits those values; explicitly passed credentials and workers started earlier remain outside that protection.
 
-export const createDb = fortenv.string(({ DATABASE_URL }) => {
-   //                                     ^ string | undefined  ✅
-   return new DatabaseClient(DATABASE_URL);
-});
-```
+## TypeScript
 
-**Important:** this types the _keyspace_, not the per-wrapper grant. `createDb`'s `s` is typed as having both `DATABASE_URL` and `STRIPE_SECRET_KEY`, even though Fortenv only injects the keys it is configured to grant. Values not granted by configuration are `undefined` at runtime regardless of what the type says. Use option 2 or 3 if you want the type to match the grant exactly.
-
-### Option 2 — Parameter annotation (precise, per-wrapper)
-
-Narrow a single wrapper's secrets type with a parameter annotation:
+For a narrower callback type, annotate its first parameter:
 
 ```ts
 import { fortenv, type SecretValues } from "@fortenv/core";
 
-export const pay = fortenv.string((s: SecretValues<"STRIPE_SECRET_KEY">) => {
-   //                                  ^ only STRIPE_SECRET_KEY, nothing else
-   return charge(s.STRIPE_SECRET_KEY);
+export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">) => {
+   if (DATABASE_URL === undefined) throw new Error("DATABASE_URL is required");
+   return new DatabaseClient(DATABASE_URL);
 });
 ```
 
-### Option 3 — Typed instance (precise, per-wrapper, reusable)
+You can also use `new Fortenv<"DATABASE_URL">()` or augment `FortenvSecretKeys` for project-wide key suggestions. These are typing aids only: **configuration remains the authority**, and values remain `string | undefined`. See [typing details](https://github.com/atopala/fortenv/blob/main/packages/fortenv/docs/design.md#66-type-safety).
 
-Create a typed `Fortenv` instance when several wrappers share the same key set:
+## Optional telemetry
 
-```ts
-import { Fortenv } from "@fortenv/core";
-
-const db = new Fortenv<"DATABASE_URL">();
-
-export const createDb = db.string(({ DATABASE_URL }) => new DatabaseClient(DATABASE_URL));
-export const migrateDb = db.string(({ DATABASE_URL }) => runMigrations(DATABASE_URL));
-```
-
-### Combining approaches
-
-Options 1 and 2/3 compose: augment `FortenvSecretKeys` for convenient loose typing across most wrappers, and use a parameter annotation or typed instance on the wrappers where precise narrowing matters.
-
-```ts
-// fortenv.d.ts — all keys declared once
-declare module "@fortenv/core" {
-   interface FortenvSecretKeys {
-      DATABASE_URL: unknown;
-      STRIPE_SECRET_KEY: unknown;
-      INTERNAL_API_KEY: unknown;
-   }
-}
-export {};
-```
-
-```ts
-// payment.ts — narrows to exactly what this wrapper needs
-export const pay = fortenv.string((s: SecretValues<"STRIPE_SECRET_KEY">) => charge(s.STRIPE_SECRET_KEY));
-
-// db.ts — uses the global declaration, s has all three keys
-export const createDb = fortenv.string(({ DATABASE_URL }) => new DatabaseClient(DATABASE_URL));
-```
-
-All typing aids are erased at runtime and not verified against `fortenv.config.*`. Configuration is the sole runtime authority for which keys are injected.
-
-## Config discovery
-
-Fortenv expects exactly one of these files in the working directory:
-
-- `fortenv.config.ts`
-- `fortenv.config.mts`
-- `fortenv.config.js`
-- `fortenv.config.mjs`
-
-Set `FORTENV_CONFIG` to a relative or absolute file path to select another file. Relative paths are resolved from the working directory. Multiple defaults are an error; parent directories are never searched.
-
-Configuration uses ESM syntax. In a CommonJS project, use `.mjs` or `.mts`. TypeScript must use Node's native type-strippable syntax: no enums or runtime namespaces. Native TypeScript imports must reference files Node can actually resolve, such as `./db.ts`; Fortenv does not remap `.js` imports to `.ts` or implement TypeScript path aliases.
-
-### How bootstrap protects config imports
-
-Configuration contains application function references, so importing it normally would execute application dependencies before Fortenv knows which secrets to protect.
-
-Fortenv therefore:
-
-1. Reads the config and strips TypeScript through Node's built-in API.
-2. Scans static import declarations and rewrites them into calls to a discovery loader.
-3. Evaluates this discovery copy with inert mock imports. Only `@fortenv/core/config` supplies its real helper. No application or third-party modules load in this phase.
-4. Extracts the secret names and telemetry flags, captures values privately, deletes them from the original environment object, and installs the guard with the reporting policy.
-5. Imports the original config normally and registers its real wrapped function identities.
-
-The discovery copy runs outside the real module cache. Application modules execute only during the real import, with configured secrets already hidden. Ordinary variables such as `NODE_ENV` remain available to those modules.
-
-### Declarative, trusted configuration
-
-**The config body executes twice.** Treat it as trusted, deterministic configuration with imported function references. Local config factories and computed keys are supported. It must be deterministic and free of side effects. Secret names must not depend on imported values, time, randomness, or environment state.
-
-Discovery uses a separate VM context without `process`, `require`, or timers to catch accidental misuse. This is not a sandbox for hostile config. Imported values may only be used as grant references; attempting to call them or access properties on a mock function fails discovery. Namespace access such as `readers.createDb` is supported.
-
-Supported import forms include named, aliased, default, mixed, and namespace imports. Side-effect imports are inert during discovery and execute normally during the real import. Type-only imports are stripped. Imports are hoisted ahead of the config body during discovery.
-
-V1 rejects named exports, re-exports, import attributes, regex literals, division, and template interpolation in config. Native dynamic imports are unavailable during discovery. Use ordinary quoted strings and one `export default` (a direct declaration or a local config variable). Identifiers starting with `__fortenv_` are reserved for the transformer.
-
-The runtime validates that real secret names match discovery. This is a diagnostic for invalid config, not protection against a malicious config that deliberately changes names: a previously undiscovered secret could already have been read during real module loading. Prefer literal or deterministically computed names.
-
-Do not initialize clients at module scope in modules imported by config:
-
-```js
-export const createDb = fortenv.string(({ DATABASE_URL }) => {
-   /* create client using DATABASE_URL */
-});
-// const db = createDb(); // Error: configuration is still loading.
-```
-
-Call the wrapper from the application after bootstrap instead.
-
-## Injection and value lifetime
-
-```ts
-export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">, poolSize: number) => {
-   return new DatabaseClient(DATABASE_URL, { poolSize });
-});
-const db = createDb(20); // No secrets argument at the call site.
-```
-
-Each call receives a fresh, frozen, null-prototype object containing only its configured keys. Caller arguments cannot replace it. `SecretValues` is exported for explicit TypeScript annotations and accepts an optional key union (`SecretValues<"DATABASE_URL">`); annotate the callback's parameter or use `new Fortenv<Keys>()` to type the injected object, and with neither it stays the loose `SecretValues`. These typing aids are not verified against configuration. Values are typed as `string | undefined` because separate runtime configuration determines the actual grants.
-
-Remaining arguments, `this`, returned values, Promise identity and error identity are preserved. Ordinary generic callback inference is supported; arbitrary overloaded callback preservation is not promised. Generators and construction through `new` are unsupported. Thenables are returned unchanged.
-
-Nested wrappers receive only their own keys. Helpers and dependencies gain no ambient access: pass a specific credential explicitly when they need it. Async callbacks can use injected values across awaits, and concurrent calls receive separate objects.
-
-Strings and injected objects can be retained after a callback returns, throws or rejects. Fortenv cannot revoke already delivered data. Detached work can use deliberately captured credentials, but its protected `process.env` reads always throw.
-
-## Environment behavior
-
-Protected values are delivered only through the injected object. Direct protected environment reads always throw a Fortenv error identifying the secret name without its value, including inside registered callbacks and their dependencies. Protection applies before real config dependencies execute; an uncaught unauthorized read during their initialization aborts startup.
-
-Protected names remain absent from enumeration, `in`, property descriptors, spread, JSON serialization, and `Object.keys/entries/values`, even inside an authorized call. Assignment, deletion, and `Object.defineProperty` for protected names throw. Normal variables keep Node's string conversion and mutation behavior.
-
-The installed `process.env` property cannot be replaced or redefined. Fortenv also updates the named `env` export from `node:process`. Existing references to the original environment object have the captured secrets removed. There is no reset, reload, secret rotation, or public registration API in V1.
-
-On Windows, protected-name lookups follow the main thread's case-insensitive environment behavior. Case-equivalent config keys are rejected. Injected objects retain the exact configured spelling and use ordinary case-sensitive JavaScript property access. `NEXT_PUBLIC_*` names are rejected because they are intended to be client-visible.
-
-## Security telemetry
-
-Unauthorized direct reads throw `FortenvAccessError` with `code: "FORTENV_ACCESS_DENIED"`, `operation: "get"`, the secret name, and all available caller stack frames. Fortenv temporarily raises V8's stack limit while capturing the error, then restores the application's limit. This cannot reconstruct arbitrary asynchronous call history. Error data contains no protected values or environment dump.
-
-```js
-import { FortenvAccessError } from "@fortenv/core";
-```
-
-The same Error is published synchronously on Node's `fortenv.security` diagnostics channel before it is thrown, so catching the exception does not suppress the event. Events include `version: 1`, `name`, `severity`, `operation`, Unix-millisecond `timestamp`, `error`, and a `secret` name for denied reads.
-
-Configure reporting through the existing config:
-
-```js
-export default defineConfig({
-   secrets: { DATABASE_URL: [createDb] },
-   telemetry: {
-      enumeration: true,
-      stderrFallback: false,
-   },
-});
-```
-
-Both flags default to false and are installed before real config dependencies execute. `enumeration: true` reports `fortenv.env.enumerated` warnings with `operation: "ownKeys"` and the caller stack. Enumeration still hides protected keys and values, including inside authorized calls, and does not throw merely because it occurred. A warning records observation, not proof of malicious intent. Enumeration events contain no secret-name field. No rate limiting or deduplication is applied.
-
-Fortenv publishes each security event on a logger-neutral subscription in core `@fortenv/core/telemetry`; forwarding to a specific logger is done by the caller, so core stays dependency-free.
-
-Connect any logger through the generic subscription — this is the primary integration path and needs no extra package:
+Denied reads throw `FortenvAccessError` (`FORTENV_ACCESS_DENIED`) and publish an event with the key name and available caller stack, never the protected value. Successful injection is silent.
 
 ```js
 import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 
 const disconnect = subscribeSecurityEvents((event) => {
-   // Forward to your existing logger/monitoring system.
-   // event.error is the Error thrown for a denied read; event.severity is "error" | "warn".
-   // Denials carry event.secret (the NAME, never the value).
-});
-// Later: disconnect() when this observer is no longer needed.
-```
-
-Managed observer exceptions and rejected promises are contained. Reads from an observer or its spawned async work still obey authorization but do not generate recursive telemetry. Other observers continue receiving the original event. Subscribers attached directly through Node's diagnostics_channel API retain Node's own exception behavior.
-
-Reference adapters for [Pino](../pino/README.md) and [OpenTelemetry](../opentelemetry/README.md) live in this repository. Each is a thin, correctly-typed `connectFortenv(logger)` wrapper over `subscribeSecurityEvents` that encodes the logger's own conventions — Pino receives the Error under `err` with namespaced `fortenv` metadata (denials at `error`, enumeration at `warn`, per [Pino's error serialization](https://github.com/pinojs/pino/blob/main/docs/api.md)); OpenTelemetry receives severity ERROR (17) or WARN (13), `fortenv.*` attributes and `exception.type/message/stacktrace`, per its [log severity model](https://opentelemetry.io/docs/specs/otel/logs/data-model/), in the active caller context. They keep those logger dependencies out of Fortenv's zero-dependency core. Copy either adapter, or subscribe directly as above.
-
-`stderrFallback: true` writes one JSON record for a denied read when no observer is connected. Connecting an observer suppresses that fallback; disconnecting the last observer restores it. It does not print enumeration warnings. An uncaught exception can also receive Node's normal stderr output, independently of Fortenv's fallback. With fallback disabled and no observer, a caught denial remains unlogged.
-
-Observers only receive events after they connect. A built-in-only diagnostics-channel preload can observe real config import failures; application-level logger connections start observing when the application connects them. Remote delivery and exporter flush during fatal startup remain the application's responsibility.
-
-## Security boundary
-
-Fortenv reduces ambient environment access by dependencies. It is not isolation against arbitrary code executing in the same process.
-
-```js
-const createDb = fortenv.string(({ DATABASE_URL }) => {
-   // A dependency's process.env.DATABASE_URL read still throws here.
-   return new DatabaseClient(DATABASE_URL);
+   // Forward event.error and event metadata to your existing logger.
 });
 ```
 
-Pass each dependency only the credential it needs. A dependency can retain or leak credentials deliberately handed to it. Code can also call an accessible registered wrapper directly; Fortenv does not authenticate callers. Returned secrets and captured credentials are outside its protection.
+Observers see events only after connecting. Managed observer errors are contained. Optional [Pino](https://github.com/atopala/fortenv/blob/main/packages/pino/README.md) and [OpenTelemetry](https://github.com/atopala/fortenv/blob/main/packages/opentelemetry/README.md) adapters accept your existing logger through `connectFortenv(logger)`.
 
-### What Fortenv is designed to stop
+Two config flags default to `false`: `telemetry.enumeration` reports environment enumeration while still hiding protected values; `telemetry.stderrFallback` logs denied reads to stderr when no observer is connected. Without an observer or fallback, caught denials are not logged. See the [telemetry contract](https://github.com/atopala/fortenv/blob/main/packages/fortenv/docs/design.md#67-unauthorized-reads-and-telemetry).
 
-Each item below is exercised by the runtime-hardening test suite. Fortenv denies a dependency that tries to read a configured secret through ambient `process.env`, including:
+---
 
-- direct reads (`process.env.DATABASE_URL`, `process.env["DATABASE_URL"]`), destructuring, and reads inside, underneath, or detached from a registered callback;
-- enumeration and serialization — `Object.keys/values/entries`, spread, `JSON.stringify`, `for…in`, `in`, and property descriptors — which never expose a protected name or value;
-- mutating or deleting a protected key, or replacing/redefining the guarded `process.env` object itself;
-- forging a grant for an unauthorized wrapper, or intercepting a delivered value, reopening a protected read, or suppressing a denial by replacing shared built-ins (Map/Set/WeakMap/Array/Reflect and similar) **after Fortenv has loaded** — the secret-delivery, grant, guard, and error paths use references captured beforehand;
-- configuration whose secret set changes between the discovery and real-load phases (startup fails closed).
-
-### What Fortenv does not protect against
-
-These are inherent to running untrusted code in one operating-system process; Fortenv is defense-in-depth, not a sandbox, and never claims otherwise:
-
-- native addons, or code reading the process's initial environment directly (for example `/proc/self/environ` on Linux);
-- anything that tampers with runtime internals **before** Fortenv's preload runs, or an earlier preload/loader/startup tool;
-- a secret you explicitly hand to a dependency, and any value already returned, captured, or logged — Fortenv cannot revoke delivered data;
-- any code that can call an accessible registered wrapper: authorization is by exact wrapper identity, not by caller;
-- heap inspection, a debugger or `--inspect`, and memory dumps;
-- worker threads and child processes (see below) — Fortenv guards only the thread it initializes in.
-
-Protection starts when preload captures and scrubs secrets. Earlier preloads, loaders, startup tooling, native code, OS inspection, already-copied values, and code tampering with runtime internals are outside the guarantee. The config, Fortenv installation, and bootstrap environment are trusted. Package export restrictions prevent accidental internal imports; they are not a security boundary against direct filesystem access.
-
-Within that boundary, Fortenv is fail-closed and hardened against dependencies that replace shared built-ins after it loads: the secret-delivery, grant, environment-guard, and error paths use references captured before real config dependencies run, so a later replacement of those operations cannot intercept a value, forge a grant, reopen a protected read, or suppress a denial. This is defense-in-depth for code that loads after Fortenv, not protection against the pre-load and same-process limits listed above; see the design's runtime built-in tampering section.
-
-Fortenv installs its guard on the thread that runs the preload; a worker thread is a separate isolate with its own `process.env` that this guard does not cover. A worker started after the scrub that inherits the environment normally will not see the scrubbed secrets, but Fortenv does not enforce worker isolation: a worker spawned before the guard installs, one given the values explicitly, or one sharing the live environment (`worker_threads` `SHARE_ENV`) can still receive them. To guard secrets inside a worker, spawn it with a sanitized environment and run `--import @fortenv/core/register` in the worker itself. Child processes and workers receive no automatic secret or grant transfer, and copying credentials into another process is the application's responsibility.
-
-Use one shared Fortenv package instance. Config and application must reference the same wrapper objects; bundling a second copy of either wrappers or the runtime breaks identity registration. Automatic bundler integration, Bun, Deno, Next.js integration, and edge runtimes are outside V1 support.
-
-## Development
-
-```sh
-pnpm install
-pnpm build
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm test:integration
-```
-
-TypeScript and Vitest are development tools only. ESLint checks the workspace; separate TypeScript checks cover unused code, fallthrough, unreachable code and unused labels. The published library has no runtime or peer dependencies. Each integration test lives beside the JavaScript or TypeScript program it executes in a fresh Node process against the built package. Tests and their programs are included in typechecking and excluded from the published package.
-
-Real Pino/OpenTelemetry compatibility tests live in the separate private [telemetry integration project](../../tests/telemetry-integration/README.md). That project owns test SDK providers/exporters and consumes the core and standalone adapters' public dist exports. Separate [ESM and CommonJS consumer projects](../../tests/CONTEXT.md) test all four consumer/dependency combinations, including denied access, startup failures and callback rejections. The root test command and Vitest configuration run all four projects; package-local tests cover Fortenv's source and pipeline tests.
+[Full design and API](https://github.com/atopala/fortenv/blob/main/packages/fortenv/docs/design.md) · [Development and tests](https://github.com/atopala/fortenv/blob/main/CONTEXT.md) · [Apache-2.0](LICENSE)

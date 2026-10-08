@@ -14,7 +14,7 @@ This is the dependency-free runtime package. Read the repository [agent rules](.
 | Error stacks, subscriptions and reporting flags | [Telemetry tests](src/core/__tests__/14-telemetry/CONTEXT.md)            |
 | Actual logger adapters and SDK output           | [External telemetry tests](../../tests/telemetry-integration/CONTEXT.md) |
 
-`package.json` defines four public entries: root, config, register and telemetry. Only register bootstraps the process. `tsconfig.json` builds source and declarations into dist, excluding tests; `tsconfig.test.json` typechecks test code too. `vitest.config.ts` collects source tests, never dist. Generated files are not implementation sources.
+`package.json` defines four public entries: root, config, register and telemetry. Only register bootstraps the process. `DISCLOSURE` and the package metadata declare Fortenv's security-related dual-use functionality for npm; both must remain in every published version unless npm approves their removal. `tsconfig.json` builds source and declarations into dist, excluding tests; `tsconfig.test.json` typechecks test code too. `vitest.config.ts` collects source tests, never dist. Generated files are not implementation sources.
 
 The [runtime security hardening plan](docs/security-hardening-plan.md) proposes a test-first audit and fixes for shared built-in tampering. It records confirmed findings, investigation scope, implementation order, and verification gates; it does not supersede the design or claim that the proposed work is complete.
 
