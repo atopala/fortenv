@@ -37,8 +37,7 @@
    "files": [
       "dist",
       "LICENSE",
-      "README.md",
-      "docs/design.md"
+      "README.md"
    ],
    "engines": {
       "node": ">=22.23.2"

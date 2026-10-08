@@ -2,12 +2,12 @@
 
 Read [package context](../CONTEXT.md) and [design](../docs/design.md). This directory contains the public entry modules; implementation details live under core and runtime/node.
 
-| File         | Public entry      | Responsibility                                                       |
-| ------------ | ----------------- | -------------------------------------------------------------------- |
-| index.ts     | fortenv           | Wrapper, SecretValues type and FortenvAccessError                    |
-| config.ts    | fortenv/config    | Configuration types and validating defineConfig helper               |
-| register.ts  | fortenv/register  | Preload bootstrap                                                    |
-| telemetry.ts | fortenv/telemetry | Generic subscription, SecurityEvent type and FortenvEnumerationError |
+| File         | Public entry               | Responsibility                                                                       |
+| ------------ | -------------------------- | ------------------------------------------------------------------------------------ |
+| index.ts     | @fortenv/secrets           | Wrapper, FortenvSecretKeys, FortenvSecrets, SecretValues type and FortenvAccessError |
+| config.ts    | @fortenv/secrets/config    | Configuration types and validating defineConfig helper                               |
+| register.ts  | @fortenv/secrets/register  | Preload bootstrap                                                                    |
+| telemetry.ts | @fortenv/secrets/telemetry | Generic subscription, SecurityEvent type and FortenvEnumerationError                 |
 
 ## Telemetry boundary
 
