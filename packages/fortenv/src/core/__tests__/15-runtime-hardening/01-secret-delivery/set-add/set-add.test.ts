@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.01 SEC-05 — Set.prototype.add cannot expand a wrapper grant", () => {
    it("injects only granted names when Set.add is replaced during config loading", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

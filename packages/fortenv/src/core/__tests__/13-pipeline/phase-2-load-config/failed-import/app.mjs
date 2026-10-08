@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 const originalEnvironment = process.env;
-await assert.rejects(import("@fortenv/secrets/register"), /DEPENDENCY_FAILED_AFTER_PROTECTION/);
+await assert.rejects(import("@fortenv/core/register"), /DEPENDENCY_FAILED_AFTER_PROTECTION/);
 
 assert.equal(originalEnvironment.DATABASE_URL, undefined);
 assert.throws(() => process.env.DATABASE_URL, /unauthorized access.*DATABASE_URL/);

@@ -10,6 +10,6 @@ This group verifies the wrapper's callback invocation against the built public p
 
 The security assertions must fail against the vulnerable implementation with intercepted=true; they pass once the replacement stops observing injected values. The test's expected result never changes. Fixtures use a minimal environment and an explicit fake secret.
 
-From the repository root, run `pnpm build`, then `pnpm --dir packages/fortenv exec vitest run src/core/__tests__/13-pipeline/reflect-apply`. For direct debugging, use DATABASE_URL=fake-reflect-secret and `node --import @fortenv/secrets/register app.mjs config` (or runtime) from this directory.
+From the repository root, run `pnpm build`, then `pnpm --dir packages/fortenv exec vitest run src/core/__tests__/13-pipeline/reflect-apply`. For direct debugging, use DATABASE_URL=fake-reflect-secret and `node --import @fortenv/core/register app.mjs config` (or runtime) from this directory.
 
 Replacement before Fortenv itself loads and tampering with other built-ins are outside this targeted regression.

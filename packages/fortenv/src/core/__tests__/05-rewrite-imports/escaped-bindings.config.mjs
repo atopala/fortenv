@@ -1,4 +1,4 @@
-import { defineConfig as \u0063onfig } from '@fortenv/secrets/config';
+import { defineConfig as \u0063onfig } from '@fortenv/core/config';
 import \u0064efaultReader from './readers.mjs';
 import * as \u{72}eaders from './readers.mjs';
 import { \u0072ead, read as r\u0065ader, read as \u{10400}reader, read as read\u{1D7D8} } from './readers.mjs';

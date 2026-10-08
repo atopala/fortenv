@@ -1,4 +1,4 @@
-import { defineConfig } from '@fortenv/secrets/config';
+import { defineConfig } from '@fortenv/core/config';
 import { createDb as 𐐀 } from '../application.mjs';
 
 // This is a valid Unicode identifier spanning two UTF-16 code units.

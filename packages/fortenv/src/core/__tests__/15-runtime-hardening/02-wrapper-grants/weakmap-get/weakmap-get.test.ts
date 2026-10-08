@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.02 SEC-04 — WeakMap.prototype.get cannot forge wrapper grants", () => {
    it("keeps an unregistered wrapper empty after runtime replacement", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

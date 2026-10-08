@@ -1,4 +1,4 @@
-import { defineConfig } from '@fortenv/secrets/config';
+import { defineConfig } from '@fortenv/core/config';
 
 function createConfig() {
    return { secrets: { DATABASE_URL: 42 } };

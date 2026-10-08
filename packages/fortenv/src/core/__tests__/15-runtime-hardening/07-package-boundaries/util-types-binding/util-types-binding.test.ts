@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // live import binding is tampered — and no secret ever escapes.
 describe("15.07 SEC-11a — tampering isGeneratorFunction cannot bypass the generator guard", () => {
    it("still rejects the generator and leaks no secret under binding tampering", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

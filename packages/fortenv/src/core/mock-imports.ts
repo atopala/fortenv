@@ -30,7 +30,7 @@ function mockNamespace(specifier: string, placeholders: WeakSet<Function>): obje
 
 export function createMockLoader(placeholders: WeakSet<Function>): (specifier: string) => { namespace: object } {
    const modules = new Map<string, object>();
-   modules.set("@fortenv/secrets/config", Object.freeze({ defineConfig }));
+   modules.set("@fortenv/core/config", Object.freeze({ defineConfig }));
    return (specifier) => {
       let module = modules.get(specifier);
       if (!module) {

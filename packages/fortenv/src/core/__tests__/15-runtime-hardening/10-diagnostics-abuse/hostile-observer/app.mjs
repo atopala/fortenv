@@ -1,5 +1,5 @@
-import { FortenvAccessError } from "@fortenv/secrets";
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
+import { FortenvAccessError } from "@fortenv/core";
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 
 // Attack: a hostile security-event observer that tries to (a) extract a secret
 // VALUE from the event, (b) make a nested protected read succeed, (c) mutate the

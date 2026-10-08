@@ -23,13 +23,13 @@ Fortenv lets you draw that boundary in code. Wrap each function that needs a sec
 
 ```js
 // db.mjs — createDb is the only function granted DATABASE_URL.
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 export const createDb = fortenv.string(({ DATABASE_URL }) => new DatabaseClient(DATABASE_URL));
 ```
 
 ```js
 // fortenv.config.mjs — the grant map. Each secret lists the exact wrappers allowed to read it.
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 import { createDb } from "./db.mjs";
 import { signPayload } from "./sign.mjs";
 
@@ -59,7 +59,7 @@ Two secrets. Two functions. Three small files. This example uses Node's built-in
 ### 1. Install
 
 ```sh
-npm install @fortenv/secrets
+npm install @fortenv/core
 ```
 
 Use Node.js **22.23.2 or later**. The example uses explicit `.mjs` files so it works without changing your project's module setting.
@@ -69,7 +69,7 @@ Use Node.js **22.23.2 or later**. The example uses explicit `.mjs` files so it w
 ```js
 // signers.mjs
 import { createHmac } from "node:crypto";
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 export const signWebhook = fortenv.string(({ WEBHOOK_SECRET }, payload) => {
    // This callback receives WEBHOOK_SECRET; SESSION_SECRET is absent.
@@ -88,7 +88,7 @@ export const signSession = fortenv.string(({ SESSION_SECRET }, sessionId) => {
 
 ```js
 // fortenv.config.mjs
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 import { signSession, signWebhook } from "./signers.mjs";
 
 export default defineConfig({
@@ -118,7 +118,7 @@ Provide the secret before Node starts, then preload Fortenv:
 ```sh
 # POSIX shell; both values are fake and only for this demo.
 WEBHOOK_SECRET=fake-webhook-secret SESSION_SECRET=fake-session-secret \
-  node --import @fortenv/secrets/register app.mjs
+  node --import @fortenv/core/register app.mjs
 ```
 
 You should see:
@@ -181,7 +181,7 @@ Fortenv ships with full TypeScript support and zero type-only dependencies. Decl
 
 ```ts
 // fortenv.d.ts
-declare module "@fortenv/secrets" {
+declare module "@fortenv/core" {
    interface FortenvSecretKeys {
       DATABASE_URL: unknown;
       WEBHOOK_SECRET: unknown;
@@ -191,7 +191,7 @@ export {};
 ```
 
 ```ts
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 export const createDb = fortenv.string(({ DATABASE_URL }) => {
    //                                     ^ string | undefined  ✅
@@ -218,10 +218,10 @@ ESM and CommonJS consumers are covered by integration tests; CommonJS applicatio
 
 ## See denied access in your existing tools
 
-Core `@fortenv/secrets/telemetry` is dependency-free. Connect any monitoring system through a subscription:
+Core `@fortenv/core/telemetry` is dependency-free. Connect any monitoring system through a subscription:
 
 ```js
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 
 const disconnect = subscribeSecurityEvents((event) => {
    // Forward event.name, event.error and event metadata to your existing logger.
@@ -240,7 +240,7 @@ Thin, correctly-typed `connectFortenv(logger)` wrappers over `subscribeSecurityE
 They are not published to npm yet — copy the adapter you need, or subscribe directly as shown above. For example, the Pino adapter is ~15 lines:
 
 ```js
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 
 export function connectFortenv(logger) {
    return subscribeSecurityEvents((event) =>

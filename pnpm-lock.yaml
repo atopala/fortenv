@@ -277,7 +277,7 @@ importers:
 
   packages/opentelemetry:
     devDependencies:
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../fortenv
       '@opentelemetry/api-logs':
@@ -292,7 +292,7 @@ importers:
 
   packages/pino:
     devDependencies:
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../fortenv
       '@types/node':
@@ -313,7 +313,7 @@ importers:
       '@fortenv-fixture/esm-dependency':
         specifier: workspace:*
         version: link:../fixtures/esm-dependency
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../../packages/fortenv
       '@types/node':
@@ -331,7 +331,7 @@ importers:
       '@fortenv-fixture/esm-dependency':
         specifier: workspace:*
         version: link:../fixtures/esm-dependency
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../../packages/fortenv
       '@types/node':
@@ -343,13 +343,13 @@ importers:
 
   tests/fixtures/cjs-dependency:
     devDependencies:
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../../../packages/fortenv
 
   tests/fixtures/esm-dependency:
     devDependencies:
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../../../packages/fortenv
 
@@ -361,7 +361,7 @@ importers:
       '@fortenv/pino':
         specifier: workspace:*
         version: link:../../packages/pino
-      '@fortenv/secrets':
+      '@fortenv/core':
         specifier: workspace:*
         version: link:../../packages/fortenv
       '@opentelemetry/api':

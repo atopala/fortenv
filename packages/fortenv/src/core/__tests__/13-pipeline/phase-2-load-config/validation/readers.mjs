@@ -1,4 +1,4 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 export function raw() {
    return process.env.DATABASE_URL;

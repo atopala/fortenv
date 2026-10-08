@@ -1,6 +1,6 @@
 import "./side-effect.mjs";
 
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 
 import { authorized, smuggled } from "./reader.mjs";
 

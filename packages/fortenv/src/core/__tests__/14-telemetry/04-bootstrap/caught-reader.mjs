@@ -1,4 +1,4 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 try {
    void process.env.DATABASE_URL;

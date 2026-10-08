@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.05 SEC-12 — replaced JSON.stringify cannot replace denial errors", () => {
    it("preserves access and mutation errors after runtime replacement", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

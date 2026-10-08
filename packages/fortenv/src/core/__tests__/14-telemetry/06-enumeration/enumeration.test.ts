@@ -19,7 +19,7 @@ describe("14.06 — Configurable environment enumeration reports", () => {
       "$policy: $operation scans, observer=$observer, during import and authorized execution",
       ({ policy, operation, observer }) => {
          const args = observer ? ["--import", "../04-bootstrap/observe.mjs"] : [];
-         args.push("--import", "@fortenv/secrets/register", "app.mjs", operation);
+         args.push("--import", "@fortenv/core/register", "app.mjs", operation);
          const before = Date.now();
          const result = spawnSync(process.execPath, args, {
             cwd: new URL(".", import.meta.url),

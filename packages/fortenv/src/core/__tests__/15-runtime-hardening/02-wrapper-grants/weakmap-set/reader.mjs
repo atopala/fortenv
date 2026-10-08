@@ -1,15 +1,15 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 import { installInterceptor } from "./malicious.mjs";
 
 export const authorized = fortenv.string(
-   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/core").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database" && !Object.hasOwn(secrets, "PRIVATE_KEY"),
 );
 
 // Never named in the config; must never receive a grant even if registration is tampered.
 export const unregistered = fortenv.string(
-   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/core").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) =>
       secrets.DATABASE_URL === "fake-hardening-database" || secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

@@ -1,4 +1,4 @@
-import { defineConfig } from '@fortenv/secrets/config';
+import { defineConfig } from '@fortenv/core/config';
 import type { ApplicationOptions } from '../application-types.ts';
 import { createDb, type Reader } from '../application-types.ts';
 

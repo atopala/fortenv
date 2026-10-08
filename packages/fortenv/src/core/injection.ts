@@ -8,7 +8,7 @@ import { createNullPrototypeRecord, forEachSetValue, freezeRecord, readMap } fro
  *
  * @example
  * // fortenv.d.ts
- * declare module "@fortenv/secrets" {
+ * declare module "@fortenv/core" {
  *   interface FortenvSecretKeys {
  *     DATABASE_URL: unknown;
  *     STRIPE_SECRET_KEY: unknown;

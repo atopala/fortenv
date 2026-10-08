@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 
 import { createDb, Db, echo, outer, snapshot, unregistered } from "./factories.ts";
 const db = createDb(20);
@@ -23,7 +23,7 @@ assert.equal(first.MISSING, undefined);
 assert.equal(Object.hasOwn(first, "OTHER_SECRET"), false);
 // OTHER_SECRET is neither declared by the wrapper nor granted, so it is absent at
 // runtime and outside the injected object's type; read it through a loose view.
-const firstLoose = /** @type {import("@fortenv/secrets").SecretValues} */ (first);
+const firstLoose = /** @type {import("@fortenv/core").SecretValues} */ (first);
 assert.equal(firstLoose.OTHER_SECRET, undefined);
 assert.notEqual(first, snapshot());
 assert.equal(Reflect.set(first, "DATABASE_URL", "forged"), false);

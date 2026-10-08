@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
 
 import { registered } from "./readers.js";
-assert.throws(() => registered(), /Fortenv: not initialized; start Node with --import @fortenv\/secrets\/register/);
+assert.throws(() => registered(), /Fortenv: not initialized; start Node with --import @fortenv\/core\/register/);
 console.log("ok");

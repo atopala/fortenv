@@ -38,11 +38,11 @@
       "typecheck": "tsc -p tsconfig.json --noEmit"
    },
    "peerDependencies": {
-      "@fortenv/secrets": "^0.1.0",
+      "@fortenv/core": "^0.1.0",
       "@opentelemetry/api-logs": "^0.222.0"
    },
    "devDependencies": {
-      "@fortenv/secrets": "workspace:*",
+      "@fortenv/core": "workspace:*",
       "@opentelemetry/api-logs": "^0.222.0",
       "@types/node": "^22.20.2",
       "typescript": "^7.0.2"

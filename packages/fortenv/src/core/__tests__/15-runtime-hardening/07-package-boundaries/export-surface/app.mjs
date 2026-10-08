@@ -4,10 +4,10 @@
 // subpath, which the package `exports` map must refuse. No route may expose a
 // secret value or let an attacker wrapper gain a grant.
 
-import * as rootNs from "@fortenv/secrets";
-import { fortenv } from "@fortenv/secrets";
-import * as configNs from "@fortenv/secrets/config";
-import * as telemetryNs from "@fortenv/secrets/telemetry";
+import * as rootNs from "@fortenv/core";
+import { fortenv } from "@fortenv/core";
+import * as configNs from "@fortenv/core/config";
+import * as telemetryNs from "@fortenv/core/telemetry";
 
 const SECRETS = ["fake-hardening-database", "fake-hardening-private-key"];
 /** @type {string[]} */
@@ -57,16 +57,16 @@ function scan(root, label) {
 }
 
 // 1. Scan all public export namespaces for a leaked secret or live store.
-scan(rootNs, "@fortenv/secrets");
-scan(configNs, "@fortenv/secrets/config");
-scan(telemetryNs, "@fortenv/secrets/telemetry");
+scan(rootNs, "@fortenv/core");
+scan(configNs, "@fortenv/core/config");
+scan(telemetryNs, "@fortenv/core/telemetry");
 
 // 2. Attempt to import internal dist modules by subpath — must be refused.
 const blockedImports = [];
 for (const spec of [
-   "@fortenv/secrets/dist/core/runtime.js",
-   "@fortenv/secrets/core/runtime",
-   "@fortenv/secrets/dist/core/injection.js",
+   "@fortenv/core/dist/core/runtime.js",
+   "@fortenv/core/core/runtime",
+   "@fortenv/core/dist/core/injection.js",
 ]) {
    try {
       await import(spec);
@@ -78,7 +78,7 @@ for (const spec of [
 
 // 3. Try to use any exported helper to install a grant for an attacker wrapper.
 const attacker = fortenv.string(
-   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/core").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) =>
       secrets.DATABASE_URL === "fake-hardening-database" || secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

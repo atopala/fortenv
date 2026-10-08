@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("13 — Runtime integration", () => {
    it("injects independent grants across nested and concurrent calls while helpers and detached reads remain denied", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

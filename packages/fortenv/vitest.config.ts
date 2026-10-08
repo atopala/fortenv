@@ -5,7 +5,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 export default defineConfig({
    root: fileURLToPath(new URL(".", import.meta.url)),
    test: {
-      name: "@fortenv/secrets",
+      name: "@fortenv/core",
       environment: "node",
       include: ["src/**/*.test.ts"],
       exclude: [...configDefaults.exclude, "**/dist/**"],

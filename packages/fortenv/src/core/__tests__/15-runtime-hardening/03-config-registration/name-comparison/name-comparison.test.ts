@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 // undiscovered PRIVATE_KEY (never captured) is never delivered.
 describe("15.03 SEC-09 — tampering the name-comparison predicate cannot admit a smuggled secret", () => {
    it("fails closed on a mismatched config and leaks no secret", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

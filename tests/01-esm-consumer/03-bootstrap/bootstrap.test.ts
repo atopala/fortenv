@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("ESM consumer bootstrap boundaries", () => {
    function run(app: string, preload = true, config?: string) {
-      const result = spawnSync(process.execPath, [...(preload ? ["--import", "@fortenv/secrets/register"] : []), app], {
+      const result = spawnSync(process.execPath, [...(preload ? ["--import", "@fortenv/core/register"] : []), app], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 15_000,

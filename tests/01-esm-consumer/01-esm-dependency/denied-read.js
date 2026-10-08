@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { FortenvAccessError } from "@fortenv/secrets";
+import { FortenvAccessError } from "@fortenv/core";
 import { createClient, createClientAsync } from "@fortenv-fixture/esm-dependency";
 
 async function main() {

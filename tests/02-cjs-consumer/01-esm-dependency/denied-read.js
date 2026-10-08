@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { FortenvAccessError } = require("@fortenv/secrets");
+const { FortenvAccessError } = require("@fortenv/core");
 const { createClient, createClientAsync } = require("@fortenv-fixture/esm-dependency");
 
 async function main() {

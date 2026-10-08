@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { channel } from "node:diagnostics_channel";
 
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 import { connectFortenv as connectOpenTelemetry } from "@fortenv/opentelemetry";
 import { connectFortenv as connectPino } from "@fortenv/pino";
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
 import { type LogRecord } from "@opentelemetry/api-logs";
 import pino from "pino";
 import { afterEach, describe, expect, it, vi } from "vitest";

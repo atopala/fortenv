@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 // captures the value — and the secret never leaks.
 describe("15.07 SEC-15 — discovery does not execute app imports before protection", () => {
    it("never lets an imported side effect capture the secret before the guard", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

@@ -59,7 +59,7 @@ Fortenv cannot know when a callback has finished using a delivered buffer (it ma
 
 ## 6. Why "never a string in this process" is unachievable in-process
 
-Node's C++ bootstrap reads the OS environment block and has V8 build `process.env` **string** values before any user code — including `@fortenv/secrets/register` — executes. Fortenv reads an already-materialized string; there is no JavaScript hook before that materialization. Deleting the key and GC'ing cannot guarantee erasure (§5). Therefore the startup string is an unavoidable T0 artifact in-process, the same root as the `/proc/self/environ` limitation.
+Node's C++ bootstrap reads the OS environment block and has V8 build `process.env` **string** values before any user code — including `@fortenv/core/register` — executes. Fortenv reads an already-materialized string; there is no JavaScript hook before that materialization. Deleting the key and GC'ing cannot guarantee erasure (§5). Therefore the startup string is an unavoidable T0 artifact in-process, the same root as the `/proc/self/environ` limitation.
 
 The only design that removes it: a **launcher** starts the app with the secret **absent from the child's environment** and delivers it after startup over a pipe/fd as **bytes into a buffer** — so Node never builds a startup string for it, and (composed with §2) it can stay a buffer until a consumer stringifies it. Even then, same-process native/OS memory reads still apply, and "restrict the secret to only the Fortenv module within the process" is impossible (one address space = one trust domain). The launcher is separate future work (design §90); this proposal composes with it but does not require it.
 

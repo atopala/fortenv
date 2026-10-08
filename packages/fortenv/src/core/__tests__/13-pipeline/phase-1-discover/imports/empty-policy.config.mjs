@@ -1,3 +1,3 @@
-import { defineConfig } from '@fortenv/secrets/config';
+import { defineConfig } from '@fortenv/core/config';
 
 export default defineConfig({ secrets: {} });

@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "@fortenv/secrets";
+import { FortenvAccessError } from "@fortenv/core";
 
 import { installInterceptor, observations, replacementError, restoreInterceptor } from "./malicious.mjs";
 

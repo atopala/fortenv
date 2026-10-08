@@ -2,7 +2,7 @@
 
 Read the root [agent rules](../../AGENTS.md) and [workspace context](../../CONTEXT.md) first. The core subscription boundary is documented in [Fortenv source context](../fortenv/src/CONTEXT.md); the event contract is design §67.
 
-`src/index.ts` exports `connectFortenv(logger)`. It subscribes through the public `@fortenv/secrets/telemetry` API, maps events to the official OpenTelemetry logger API and returns the core unsubscribe function. It owns no guard, authorization, recursion handling or logger lifecycle.
+`src/index.ts` exports `connectFortenv(logger)`. It subscribes through the public `@fortenv/core/telemetry` API, maps events to the official OpenTelemetry logger API and returns the core unsubscribe function. It owns no guard, authorization, recursion handling or logger lifecycle.
 
 `package.json` declares Fortenv and @opentelemetry/api-logs as peers and development dependencies. `tsconfig.json` builds the ESM implementation and declarations into `dist`. README documents consumer usage; LICENSE is Apache-2.0.
 

@@ -5,7 +5,7 @@ const secrets = unregistered();
 assert.deepEqual(Object.keys(secrets), []);
 // DATABASE_URL is not granted to this wrapper, so it is absent at runtime and outside
 // the injected object's (empty) type; read it through a loose view to prove absence.
-const secretsLoose = /** @type {import("@fortenv/secrets").SecretValues} */ (secrets);
+const secretsLoose = /** @type {import("@fortenv/core").SecretValues} */ (secrets);
 assert.equal(secretsLoose.DATABASE_URL, undefined);
 assert.equal(Object.getPrototypeOf(secrets), null);
 assert.equal(Object.isFrozen(secrets), true);

@@ -1,4 +1,4 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 // Choose a fixture operation, not a policy: the policy comes only from defineConfig.
 export function scanEnvironment() {

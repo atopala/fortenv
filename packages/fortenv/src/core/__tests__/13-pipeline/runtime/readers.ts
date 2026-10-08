@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { setImmediate as nextTurn } from "node:timers/promises";
 
-import { fortenv, type SecretValues } from "@fortenv/secrets";
+import { fortenv, type SecretValues } from "@fortenv/core";
 
 // Return caught errors to the assertion app so both reads and detached callbacks are checked.
 function attemptRead(name: string): string | undefined | Error {

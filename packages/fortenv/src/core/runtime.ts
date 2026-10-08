@@ -42,7 +42,7 @@ function installGrants(entries: SecretEntries): void {
 
 function invocationGrants(wrapper: Function): ReadonlySet<string> {
    if (phase === "uninitialized") {
-      throw new FortenvStateError("Fortenv: not initialized; start Node with --import @fortenv/secrets/register.");
+      throw new FortenvStateError("Fortenv: not initialized; start Node with --import @fortenv/core/register.");
    }
    if (phase !== "ready") {
       throw new FortenvStateError(`Fortenv: wrapped functions cannot run while configuration is ${phase}.`);

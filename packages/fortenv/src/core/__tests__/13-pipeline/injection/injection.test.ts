@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("13 — Explicit injection through the built package", () => {
    function run(app: string, ...args: string[]) {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", app, ...args], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", app, ...args], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

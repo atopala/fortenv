@@ -1,5 +1,5 @@
-import { fortenv, FortenvConfigError, FortenvStateError, FortenvUsageError } from "@fortenv/secrets";
-import { defineConfig } from "@fortenv/secrets/config";
+import { fortenv, FortenvConfigError, FortenvStateError, FortenvUsageError } from "@fortenv/core";
+import { defineConfig } from "@fortenv/core/config";
 import { describe, expect, it } from "vitest";
 
 // TDD (RED first): the error taxonomy is a new behavioral contract. These tests

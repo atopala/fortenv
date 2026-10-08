@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 // FortenvAccessError, no secret value leaks, and the process survives.
 describe("15.05 SEC-12a — stack-capture tampering cannot break the denial error contract", () => {
    it("still throws FortenvAccessError with no value leak under a throwing captureStackTrace", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

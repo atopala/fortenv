@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // is reachable, any internal import resolves, or an attacker wrapper gains a grant.
 describe("15.07 SEC-14 — package exports expose no live state or grant backdoor", () => {
    it("keeps private state, internals, and grants off the public surface", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

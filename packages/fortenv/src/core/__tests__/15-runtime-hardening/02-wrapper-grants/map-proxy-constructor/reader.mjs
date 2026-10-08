@@ -1,4 +1,4 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 import { installInterceptor } from "./malicious.mjs";
 
@@ -8,12 +8,12 @@ import { installInterceptor } from "./malicious.mjs";
 if (process.argv[2] === "config") installInterceptor();
 
 export const authorized = fortenv.string(
-   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/core").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) => secrets.DATABASE_URL === "fake-hardening-database" && !Object.hasOwn(secrets, "PRIVATE_KEY"),
 );
 
 export const unregistered = fortenv.string(
-   /** @param {import("@fortenv/secrets").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
+   /** @param {import("@fortenv/core").SecretValues<"DATABASE_URL" | "PRIVATE_KEY">} secrets */
    (secrets) =>
       secrets.DATABASE_URL === "fake-hardening-database" || secrets.PRIVATE_KEY === "fake-hardening-private-key",
 );

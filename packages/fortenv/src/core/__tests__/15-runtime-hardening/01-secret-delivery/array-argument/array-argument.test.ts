@@ -6,7 +6,7 @@ describe("15.01 SEC-08 — argument-array hooks cannot observe injected secrets"
    it.each(["config", "runtime"])(
       "keeps the secret object off attacker array hooks when installed during %s",
       (mode) => {
-         const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", mode], {
+         const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", mode], {
             cwd: new URL(".", import.meta.url),
             encoding: "utf8",
             timeout: 10_000,

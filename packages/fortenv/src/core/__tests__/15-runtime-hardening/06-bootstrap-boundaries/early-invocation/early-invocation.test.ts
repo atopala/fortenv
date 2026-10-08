@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // that would be a real vulnerability.
 describe("15.06 SEC-11 — wrapped calls cannot obtain a secret before bootstrap is ready", () => {
    it("never delivers the secret to an early invocation", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

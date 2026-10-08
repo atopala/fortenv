@@ -77,7 +77,7 @@ For multi-step work, state a short plan with a verification criterion for each s
 - Authorization uses exact wrapper function identity. Do not infer permission from names, source text, modules, paths, stack traces, or async context.
 - Config discovery happens before the real config import. Discovery uses transformed static imports and inert placeholders; real registration uses the original config and exact wrappers after the environment is protected.
 - Treat configuration as trusted and deterministic. The discovery VM is not a hostile-code sandbox.
-- `@fortenv/secrets/telemetry` remains dependency-free and exposes generic subscriptions. Logger-specific mappings belong in standalone adapter packages. Adapters accept caller-owned loggers and never create or manage providers, transports or exporters. Successful injection is silent.
+- `@fortenv/core/telemetry` remains dependency-free and exposes generic subscriptions. Logger-specific mappings belong in standalone adapter packages. Adapters accept caller-owned loggers and never create or manage providers, transports or exporters. Successful injection is silent.
 - Do not claim same-process isolation. Explicitly delivered strings can be retained, and Linux startup environment data may remain available through `/proc/self/environ`.
 
 ## Code and documentation quality

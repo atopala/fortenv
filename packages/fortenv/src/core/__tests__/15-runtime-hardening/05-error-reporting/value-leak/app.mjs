@@ -1,4 +1,4 @@
-import { FortenvAccessError } from "@fortenv/secrets";
+import { FortenvAccessError } from "@fortenv/core";
 
 // SEC-22 assurance: exercise every diagnostic surface with fake values set, and
 // let the parent test assert that no secret VALUE appears in stdout/stderr. Name
@@ -29,7 +29,7 @@ observations.enumeratedKeysHidePrivate = !Object.keys(process.env).includes("PRI
 
 // 4. A config-shaped validation failure surfaced through defineConfig.
 try {
-   const { defineConfig } = await import("@fortenv/secrets/config");
+   const { defineConfig } = await import("@fortenv/core/config");
    // A grant array containing a non-function triggers a validation error whose
    // message references the name, never a value. The invalid element is the point
    // of the test, so the type error is expected and asserted by the compiler.

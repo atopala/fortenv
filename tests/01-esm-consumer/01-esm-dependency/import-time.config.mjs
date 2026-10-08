@@ -1,6 +1,6 @@
 import "@fortenv-fixture/esm-dependency/import-time";
 
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 import { createClient, createClientAsync, failAsync, failSync } from "@fortenv-fixture/esm-dependency";
 export default defineConfig({
    secrets: {

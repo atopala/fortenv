@@ -138,10 +138,10 @@ V1 targets Node.js 22.23.2 and later, with Node 22 as the tested baseline. Enfor
 
 # 6. Package API
 
-- `@fortenv/secrets` exports the `Fortenv` class and a default `fortenv` instance (`fortenv = new Fortenv<FortenvSecrets>()`). Delivery-form methods register a callback: `fortenv.string(fn)` delivers plain-string values (the current V1 behavior); `fortenv.buffer(fn)` and `fortenv.secret(fn)` are forthcoming delivery forms. Secret keys are typed via the augmentable `FortenvSecretKeys` interface (declared once in a project `.d.ts`, auto-narrows the default instance), a `SecretValues<Keys>` parameter annotation, or `new Fortenv<Keys>()`; all are erased typing aids, not verified against configuration. Also exports `FortenvSecretKeys`, `FortenvSecrets`, the `FortenvAccessError`/`FortenvConfigError`/`FortenvStateError`/`FortenvUsageError` error taxonomy (see §68), and the `SecretValues` type.
-- `@fortenv/secrets/config` exports `defineConfig`, configuration and telemetry option types.
-- `@fortenv/secrets/register` performs preload initialization.
-- `@fortenv/secrets/telemetry` exports `FortenvEnumerationError`, `SecurityEvent`, and `subscribeSecurityEvents`.
+- `@fortenv/core` exports the `Fortenv` class and a default `fortenv` instance (`fortenv = new Fortenv<FortenvSecrets>()`). Delivery-form methods register a callback: `fortenv.string(fn)` delivers plain-string values (the current V1 behavior); `fortenv.buffer(fn)` and `fortenv.secret(fn)` are forthcoming delivery forms. Secret keys are typed via the augmentable `FortenvSecretKeys` interface (declared once in a project `.d.ts`, auto-narrows the default instance), a `SecretValues<Keys>` parameter annotation, or `new Fortenv<Keys>()`; all are erased typing aids, not verified against configuration. Also exports `FortenvSecretKeys`, `FortenvSecrets`, the `FortenvAccessError`/`FortenvConfigError`/`FortenvStateError`/`FortenvUsageError` error taxonomy (see §68), and the `SecretValues` type.
+- `@fortenv/core/config` exports `defineConfig`, configuration and telemetry option types.
+- `@fortenv/core/register` performs preload initialization.
+- `@fortenv/core/telemetry` exports `FortenvEnumerationError`, `SecurityEvent`, and `subscribeSecurityEvents`.
 - Standalone `@fortenv/pino` and `@fortenv/opentelemetry` packages each export `connectFortenv(logger): () => void`, typed with the corresponding library's official `Logger`.
 
 Ordinary root/config/telemetry imports do not bootstrap the application.
@@ -152,7 +152,7 @@ Ordinary root/config/telemetry imports do not bootstrap the application.
 
 ```ts
 // db.ts — definitions only during configuration loading
-import { fortenv, type SecretValues } from "@fortenv/secrets";
+import { fortenv, type SecretValues } from "@fortenv/core";
 import { Db } from "your-database-package";
 export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE_URL">, poolSize: number = 10) => {
    if (DATABASE_URL === undefined) throw new Error("DATABASE_URL is required");
@@ -162,7 +162,7 @@ export const createDb = fortenv.string(({ DATABASE_URL }: SecretValues<"DATABASE
 
 ```ts
 // fortenv.config.ts
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 import { createDb } from "./db.ts";
 export default defineConfig({ secrets: { DATABASE_URL: [createDb] } });
 ```
@@ -173,7 +173,7 @@ import { createDb } from "./db.ts";
 export const db = createDb(20);
 ```
 
-Run `node --import @fortenv/secrets/register app.ts`. Config imports factory definitions; the application invokes them after preload completes. A dependency's `process.env.DATABASE_URL` read throws even inside `new Db(...)`. The credential explicitly passed to `Db` is outside Fortenv's control.
+Run `node --import @fortenv/core/register app.ts`. Config imports factory definitions; the application invokes them after preload completes. A dependency's `process.env.DATABASE_URL` read throws even inside `new Db(...)`. The credential explicitly passed to `Db` is outside Fortenv's control.
 
 ---
 
@@ -364,7 +364,7 @@ Fortenv must initialize before normal application code.
 Preferred:
 
 ```bash
-node --import @fortenv/secrets/register index.js
+node --import @fortenv/core/register index.js
 ```
 
 If multiple preload modules are used, Fortenv must execute before any potentially untrusted application preload code.
@@ -432,7 +432,7 @@ Nothing from the application dependency graph may execute to obtain this result.
 
 # 31. Phase 1 uses transformed configuration execution
 
-Read source, strip TypeScript with Node, rewrite static imports into awaited mock-loader calls, and execute the resulting discovery copy. `@fortenv/secrets/config` supplies the real validating helper; application imports supply inert placeholder functions. No application dependencies execute. Validate the resulting config and extract names and telemetry options. This is executed discovery, not AST-only key extraction.
+Read source, strip TypeScript with Node, rewrite static imports into awaited mock-loader calls, and execute the resulting discovery copy. `@fortenv/core/config` supplies the real validating helper; application imports supply inert placeholder functions. No application dependencies execute. Validate the resulting config and extract names and telemetry options. This is executed discovery, not AST-only key extraction.
 
 ---
 
@@ -462,7 +462,7 @@ Therefore imported grant references become inert placeholder functions during Ph
 
 ```js
 // Original
-import { defineConfig } from "@fortenv/secrets/config";
+import { defineConfig } from "@fortenv/core/config";
 import { createDb } from "./db.mjs";
 export default defineConfig({ secrets: { DATABASE_URL: [createDb] } });
 ```
@@ -470,7 +470,7 @@ export default defineConfig({ secrets: { DATABASE_URL: [createDb] } });
 Conceptually rewritten:
 
 ```js
-const { defineConfig } = (await mockImport("@fortenv/secrets/config")).namespace;
+const { defineConfig } = (await mockImport("@fortenv/core/config")).namespace;
 const { createDb } = (await mockImport("./db.mjs")).namespace;
 return defineConfig({ secrets: { DATABASE_URL: [createDb] } });
 ```
@@ -981,7 +981,7 @@ Synchronously publish the same error before throwing on `fortenv.security`, with
 
 `telemetry.enumeration: true` reports `fortenv.env.enumerated`, severity `warn`, operation `ownKeys`, timestamp and a `FortenvEnumerationError` caller stack. Listing keys or keys and values still succeeds with protected keys filtered out. Enumeration events have no secret-name field and do not prove malicious intent. `in` and descriptors hide keys without enumeration warnings. No deduplication or rate limiting is implied.
 
-`@fortenv/pino` exports `connectFortenv(logger)`, forwarding actual Error objects under `err` and namespaced metadata at error/warn level. `@fortenv/opentelemetry` exports the same function name, forwarding severity 17/13, exception attributes and Fortenv metadata in the caller's context. Each adapter uses the official logger types and declares Fortenv plus its logger API as peer dependencies. Adapters accept existing logger instances and own no SDK, provider, exporter or transport; the caller owns configuration, flush and shutdown. Core `@fortenv/secrets/telemetry` has no logger-specific imports, interfaces or mapping logic. Its `subscribeSecurityEvents` supports arbitrary observers and supplies exception containment and recursion suppression for both adapters. All disconnect functions are idempotent.
+`@fortenv/pino` exports `connectFortenv(logger)`, forwarding actual Error objects under `err` and namespaced metadata at error/warn level. `@fortenv/opentelemetry` exports the same function name, forwarding severity 17/13, exception attributes and Fortenv metadata in the caller's context. Each adapter uses the official logger types and declares Fortenv plus its logger API as peer dependencies. Adapters accept existing logger instances and own no SDK, provider, exporter or transport; the caller owns configuration, flush and shutdown. Core `@fortenv/core/telemetry` has no logger-specific imports, interfaces or mapping logic. Its `subscribeSecurityEvents` supports arbitrary observers and supplies exception containment and recursion suppression for both adapters. All disconnect functions are idempotent.
 
 Managed observer throws/rejections are contained; recursive observer reads still throw but do not recursively report. Independent observers still receive the original event. Raw diagnostics-channel subscribers retain Node's exception behavior.
 
@@ -1000,7 +1000,7 @@ Structured error taxonomy, all exported from the root `fortenv` entry with a sta
 - `FortenvStateError` (`FORTENV_INVALID_STATE`) — an invalid runtime lifecycle state: a wrapped call before initialization or while loading/failed, initializing more than once, or a second guard installation.
 - `FortenvUsageError` (`FORTENV_INVALID_USAGE`) — invalid caller usage: wrapping an unsupported function kind (e.g. a generator) or a non-function, constructing a wrapped function, or mutating a protected `process.env` key. It extends `TypeError` so existing `instanceof TypeError` checks continue to hold.
 
-`FortenvEnumerationError` (`FORTENV_ENV_ENUMERATED`) remains a diagnostic event error exported from `@fortenv/secrets/telemetry`. Error construction never throws even if `Error.captureStackTrace` is replaced; stack capture is best-effort (see §67). Codes and class names are part of the public contract; messages are human-readable and may change.
+`FortenvEnumerationError` (`FORTENV_ENV_ENUMERATED`) remains a diagnostic event error exported from `@fortenv/core/telemetry`. Error construction never throws even if `Error.captureStackTrace` is replaced; stack capture is best-effort (see §67). Codes and class names are part of the public contract; messages are human-readable and may change.
 
 ---
 
@@ -1260,7 +1260,7 @@ These limitations should be visible, not buried.
 
 # 93. README quickstart
 
-Use the factory/config/app example in §7, `node --import @fortenv/secrets/register`, zero dependencies, supported extensions, missing-value handling and optional telemetry. Make the config dependency-graph startup restriction visible.
+Use the factory/config/app example in §7, `node --import @fortenv/core/register`, zero dependencies, supported extensions, missing-value handling and optional telemetry. Make the config dependency-graph startup restriction visible.
 
 ---
 
@@ -1311,7 +1311,7 @@ Run:
 - type checking;
 - linting;
 - package build;
-- real `node --import @fortenv/secrets/register ...` fixture applications.
+- real `node --import @fortenv/core/register ...` fixture applications.
 
 Review:
 

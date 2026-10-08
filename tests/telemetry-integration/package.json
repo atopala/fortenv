@@ -14,7 +14,7 @@
       "@opentelemetry/context-async-hooks": "^2.11.0",
       "@opentelemetry/sdk-logs": "^0.222.0",
       "@types/node": "^22.20.2",
-      "@fortenv/secrets": "workspace:*",
+      "@fortenv/core": "workspace:*",
       "pino": "^10.3.1",
       "typescript": "^7.0.2",
       "@fortenv/pino": "workspace:*",

@@ -8,8 +8,8 @@ async function main() {
    assert.equal(createClient, imported.createClient);
    assert.equal(createClient, required.createClient);
    assert.equal(createClient, config.secrets.DATABASE_URL[0]);
-   assert.equal((await import("@fortenv/secrets")).fortenv, require("@fortenv/secrets").fortenv);
-   assert.match(require.resolve("@fortenv/secrets"), /[/\\]dist[/\\]index\.js$/);
+   assert.equal((await import("@fortenv/core")).fortenv, require("@fortenv/core").fortenv);
+   assert.match(require.resolve("@fortenv/core"), /[/\\]dist[/\\]index\.js$/);
    assert.equal(createClient().client.url, "fake-module-secret");
    console.log("ok");
 }

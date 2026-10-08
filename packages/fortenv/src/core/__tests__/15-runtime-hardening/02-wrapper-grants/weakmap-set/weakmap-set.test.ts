@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.02 SEC-05 — WeakMap.prototype.set cannot redirect installed grants", () => {
    it("keeps an unregistered wrapper empty after registration-time replacement", () => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", "config"], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", "config"], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

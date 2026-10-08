@@ -1,4 +1,4 @@
-import { fortenv } from "@fortenv/secrets";
+import { fortenv } from "@fortenv/core";
 
 console.log("before-secret-read");
 export const ambientValue = process.env.DATABASE_URL;

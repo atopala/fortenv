@@ -1,6 +1,6 @@
 import { channel } from "node:diagnostics_channel";
 
-import { subscribeSecurityEvents } from "@fortenv/secrets/telemetry";
+import { subscribeSecurityEvents } from "@fortenv/core/telemetry";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { deniedEvent } from "./contract.js";

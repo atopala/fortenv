@@ -1,4 +1,4 @@
-const { fortenv } = require("@fortenv/secrets");
+const { fortenv } = require("@fortenv/core");
 
 class Client {
    /** @param {string | undefined} url @param {boolean} probe */

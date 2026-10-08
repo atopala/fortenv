@@ -8,4 +8,4 @@ Design §§7, 10, 14–26, 67 and 74–83. These fixtures use public built expor
 - `returns.mjs`: exact return/Promise/error identity and overlapping calls to the same wrapper.
 - `captured.mjs`: explicit closure capture survives return/throw/resolve/reject; the environment stays denied.
 
-Run each named Vitest case, or start an app with `DATABASE_URL=fake-db OTHER_SECRET=fake-other node --import @fortenv/secrets/register factory.mjs` from this directory after building.
+Run each named Vitest case, or start an app with `DATABASE_URL=fake-db OTHER_SECRET=fake-other node --import @fortenv/core/register factory.mjs` from this directory after building.

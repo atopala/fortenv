@@ -83,7 +83,7 @@ jobs:
               echo "Publishing version $VERSION"
               echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-              # Set the version on the published package. Only core `fortenv` is
+              # Set the version on the published package. Only `@fortenv/core` is
               # published for now; the @fortenv/pino and @fortenv/opentelemetry
               # adapters live in the repo as reference implementations and can be
               # added back to this list when they are published.
@@ -154,7 +154,7 @@ jobs:
          - name: Verify artifact integrity
            run: |
               declare -A EXPECTED_NAMES=(
-                ["packages/fortenv"]="fortenv"
+                ["packages/fortenv"]="@fortenv/core"
               )
               FAILED=0
               for pkg in "${!EXPECTED_NAMES[@]}"; do

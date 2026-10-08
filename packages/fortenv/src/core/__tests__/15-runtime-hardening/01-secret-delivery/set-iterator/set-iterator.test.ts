@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("15.01 SEC-06 — Set iteration cannot expand a wrapper's granted names", () => {
    it.each(["config", "runtime"])("injects only granted names when iteration is replaced during %s", (mode) => {
-      const result = spawnSync(process.execPath, ["--import", "@fortenv/secrets/register", "app.mjs", mode], {
+      const result = spawnSync(process.execPath, ["--import", "@fortenv/core/register", "app.mjs", mode], {
          cwd: new URL(".", import.meta.url),
          encoding: "utf8",
          timeout: 10_000,

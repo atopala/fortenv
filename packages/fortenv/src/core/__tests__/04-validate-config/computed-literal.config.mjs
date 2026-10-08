@@ -1,4 +1,4 @@
-import { defineConfig } from '@fortenv/secrets/config';
+import { defineConfig } from '@fortenv/core/config';
 import { createDb } from '../13-pipeline/phase-1-discover/application.mjs';
 
 // This computed property produces an ordinary, valid secret name.
