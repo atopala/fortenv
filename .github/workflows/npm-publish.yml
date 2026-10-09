@@ -1,19 +1,19 @@
-name: Publish Packages to npm
+name: Stage Packages for npm Release
 
-# Publishing is triggered by CREATING a GitHub Release. The version to publish is
+# Staging is triggered by CREATING a GitHub Release. The version to stage is
 # read from the release tag (e.g. tag `v0.1.0` -> version `0.1.0`); it is not read
 # from the committed package.json. This keeps the repository's package.json version
 # as "the next version in progress" until a release is actually cut.
 #
-# `workflow_dispatch` allows a manual dry run (and a real run) without a release,
-# for validating the pipeline end to end.
+# `workflow_dispatch` allows a manual dry run (and a real staging run) without a
+# release, for validating the pipeline end to end.
 on:
    release:
       types: [created]
    workflow_dispatch:
       inputs:
          dry_run:
-            description: "Dry run — build, verify, and report without publishing"
+            description: "Dry run — build, verify, and report without staging"
             required: true
             default: "true"
             type: choice
@@ -77,14 +77,14 @@ jobs:
               fi
               VERSION="${VERSION#v}"
               if [ -z "$VERSION" ]; then
-                echo "::error::Could not determine a version to publish."
+                echo "::error::Could not determine a version to stage."
                 exit 1
               fi
-              echo "Publishing version $VERSION"
+              echo "Preparing version $VERSION"
               echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-              # Set the version on the published package. Only `@fortenv/core` is
-              # published for now; the @fortenv/pino and @fortenv/opentelemetry
+              # Set the version on the staged package. Only `@fortenv/core` is
+              # staged for now; the @fortenv/pino and @fortenv/opentelemetry
               # adapters live in the repo as reference implementations and can be
               # added back to this list when they are published.
               node -e "const f='packages/fortenv/package.json'; const p=JSON.parse(require('fs').readFileSync(f)); p.version='$VERSION'; require('fs').writeFileSync(f, JSON.stringify(p, null, 2)+'\n')"
@@ -110,10 +110,10 @@ jobs:
                  packages/fortenv/docs/design.md
 
    # ---------------------------------------------------------------------------
-   # Step 2: Publish. Downloads the pre-built artifacts and publishes them. Does
-   # NOT run `pnpm install` or any package lifecycle script, so a compromised
-   # dependency cannot run during publish. Egress is locked to the registry and
-   # provenance endpoints.
+   # Step 2: Stage. Downloads the pre-built artifacts and submits them to npm's
+   # staged-publishing queue. A maintainer must approve the staged version with
+   # 2FA before it becomes public. This is required for dual-use packages and
+   # keeps the automated job free of long-lived npm credentials.
    # ---------------------------------------------------------------------------
    publish:
       needs: build-and-test
@@ -199,26 +199,21 @@ jobs:
               esac
               echo "version=$VERSION" >> "$GITHUB_OUTPUT"
               echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
-              echo "Publishing $VERSION with dist-tag: $NPM_TAG"
+              echo "Preparing $VERSION with dist-tag: $NPM_TAG"
 
-         - name: Publish to npm
+         - name: Stage on npm
            env:
-              # First release bootstrap: authenticate with an automation token stored
-              # as the NPM_TOKEN repository/environment secret. Once all packages exist
-              # on npm you can configure npm Trusted Publishing (OIDC) for the repo and
-              # remove this token — provenance below already uses the id-token permission.
-              NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
               NPM_CONFIG_PROVENANCE: "true"
            run: |
               NPM_TAG="${{ steps.version.outputs.npm_tag }}"
               VERSION="${{ steps.version.outputs.version }}"
               DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
-              PUBLISHED=""
+              STAGED=""
               SKIPPED=""
               FAILED=""
 
-              publish_pkg() {
+              stage_pkg() {
                 local pkg_dir="$1"
                 local pkg_name
                 pkg_name=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$pkg_dir/package.json')).name)")
@@ -232,33 +227,34 @@ jobs:
                 fi
 
                 if [ "$DRY_RUN" = "true" ]; then
-                  echo "DRY RUN — would publish ${pkg_name}@${VERSION} (tag: $NPM_TAG)"
-                  PUBLISHED="${PUBLISHED}  - $pkg_dir (would publish ${pkg_name}@${VERSION})\n"
+                  echo "DRY RUN — would stage ${pkg_name}@${VERSION} (tag: $NPM_TAG)"
+                  STAGED="${STAGED}  - $pkg_dir (would stage ${pkg_name}@${VERSION})\n"
                   return
                 fi
 
-                if npx npm@latest publish --ignore-scripts "./$pkg_dir" --access public --tag "$NPM_TAG" --provenance; then
-                  echo "Published ${pkg_name}@${VERSION}"
-                  PUBLISHED="${PUBLISHED}  - $pkg_dir (${pkg_name}@${VERSION})\n"
+                if npx npm@latest stage publish "./$pkg_dir" --ignore-scripts --access public --tag "$NPM_TAG" --provenance; then
+                  echo "Staged ${pkg_name}@${VERSION} for maintainer approval"
+                  STAGED="${STAGED}  - $pkg_dir (${pkg_name}@${VERSION})\n"
                 else
-                  echo "::error::Failed to publish ${pkg_name}@${VERSION} ($pkg_dir)"
+                  echo "::error::Failed to stage ${pkg_name}@${VERSION} ($pkg_dir)"
                   FAILED="${FAILED}  - $pkg_dir (${pkg_name}@${VERSION})\n"
                 fi
               }
 
-              # Only core `fortenv` is published for now. Add publish_pkg calls for
+              # Only core `fortenv` is staged for now. Add stage_pkg calls for
               # packages/pino and packages/opentelemetry here when the adapters ship.
-              publish_pkg "packages/fortenv"
+              stage_pkg "packages/fortenv"
 
               {
-                echo "### Publish report ($([ "$DRY_RUN" = "true" ] && echo "dry run" || echo "live"))"
-                [ -n "$PUBLISHED" ] && { echo "**Published:**"; printf "$PUBLISHED"; }
+                echo "### npm staging report ($([ "$DRY_RUN" = "true" ] && echo "dry run" || echo "live"))"
+                [ -n "$STAGED" ] && { echo "**Staged:**"; printf "$STAGED"; }
                 [ -n "$SKIPPED" ] && { echo "**Skipped:**"; printf "$SKIPPED"; }
                 [ -n "$FAILED" ] && { echo "**Failed:**"; printf "$FAILED"; }
-                [ -z "$PUBLISHED" ] && [ -z "$FAILED" ] && echo "No packages published — all versions already exist."
+                [ -z "$STAGED" ] && [ -z "$FAILED" ] && echo "No packages staged — all versions already exist."
+                [ -n "$STAGED" ] && [ "$DRY_RUN" != "true" ] && echo "Approve the staged version with 2FA in npm's Staged Packages page or with npm stage approve."
               } >> "$GITHUB_STEP_SUMMARY"
 
               if [ -n "$FAILED" ]; then
-                echo "::error::One or more packages failed to publish."
+                echo "::error::One or more packages failed to stage."
                 exit 1
               fi
