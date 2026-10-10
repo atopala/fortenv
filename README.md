@@ -1,6 +1,7 @@
 # Fortenv
 
 [![CI](https://github.com/atopala/fortenv/actions/workflows/ci.yml/badge.svg)](https://github.com/atopala/fortenv/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/%40fortenv%2Fcore.svg)](https://www.npmjs.com/package/@fortenv/core)
 [![codecov](https://codecov.io/gh/atopala/fortenv/branch/main/graph/badge.svg)](https://codecov.io/gh/atopala/fortenv)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.23.2-brightgreen.svg)](https://nodejs.org)
